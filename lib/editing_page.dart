@@ -30,21 +30,45 @@ class _EditingPageState extends State<EditingPage> {
   final GlobalKey _canvasKey = GlobalKey();
   Color _nameColor = Colors.white;
   Color _emailColor = Colors.white;
+  Color _mobileColor = Colors.white;
+  Color _addressColor = Colors.white;
+  Color _facebookColor = Colors.white;
+  Color _linkedinColor = Colors.white;
+  Color _twitterColor = Colors.white;
+  Color _instagramColor = Colors.white;
   String _nameFontFamily = 'Roboto';
   String _emailFontFamily = 'Roboto';
+  String _mobileFontFamily = 'Roboto';
+  String _addressFontFamily = 'Roboto';
+  String _facebookFontFamily = 'Roboto';
+  String _linkedinFontFamily = 'Roboto';
+  String _twitterFontFamily = 'Roboto';
+  String _instagramFontFamily = 'Roboto';
 
   List<String> _fontFamilies = ['Roboto', 'Montserrat', 'Lobster', 'Pacifico'];
-  double _frameThickness = 4;bool _showFrame = true;
+  double _frameThickness = 4;
+  bool _showFrame = true;
   Offset _logoOffset = Offset(50, 50);
   Offset _nameOffset = Offset(50, 200);
   Offset _emailOffset = Offset(50, 250);
+  Offset _mobileOffset = Offset(100, 200);
+  Offset _addressOffset = Offset(100, 250);
+  Offset _facebookOffset = Offset(100, 300);
+  Offset _linkedinOffset = Offset(100, 350);
+  Offset _twitterOffset = Offset(100, 400);
+  Offset _instagramOffset = Offset(100, 450);
   double _logoSize = 80;
   double _nameFontSize = 18;
   double _emailFontSize = 14;
   Offset _frameOffset = Offset(50, 50);
   double _frameWidth = 250;  // Adjust frame width and height as per your needs
   double _frameHeight = 100;
-
+  double _mobileFontSize = 16;
+  double _addressFontSize = 16;
+  double _facebookFontSize = 16;
+  double _linkedinFontSize = 16;
+  double _twitterFontSize = 16;
+  double _instagramFontSize = 16;
 
   bool _isDragging = false;
   String? _draggingElement;
@@ -89,7 +113,7 @@ class _EditingPageState extends State<EditingPage> {
 
   Future<void> _fetchFrames() async {
     try {
-      final uri = "http://192.168.8.139/practice_api/viewFrame.php";
+      final uri = "http://172.27.229.66/practice_api/viewFrame.php";
       final res = await http.get(Uri.parse(uri));
       if (res.statusCode == 200) {
         List<dynamic> data = jsonDecode(res.body);
@@ -175,25 +199,54 @@ class _EditingPageState extends State<EditingPage> {
         onPanUpdate: (details) {
           if (_selectedElement == elementId) {
             setState(() {
-              if (elementId == 'logo') {
-                _logoSize += details.delta.dx * 0.5;
-                _logoSize = _logoSize.clamp(40, 200);
-              } else if (elementId == 'name') {
-                _nameFontSize += details.delta.dx * 0.1;
-                _nameFontSize = _nameFontSize.clamp(10, 60);
-              } else if (elementId == 'email') {
-                _emailFontSize += details.delta.dx * 0.1;
-                _emailFontSize = _emailFontSize.clamp(10, 60);
-              } else if (elementId == 'frame') {
-                _frameThickness += details.delta.dx * 0.2;
-                _frameThickness = _frameThickness.clamp(2, 20);
+              switch (elementId) {
+                case 'logo':
+                  _logoSize += details.delta.dx * 0.5;
+                  _logoSize = _logoSize.clamp(40, 200);
+                  break;
+                case 'name':
+                  _nameFontSize += details.delta.dx * 0.1;
+                  _nameFontSize = _nameFontSize.clamp(10, 60);
+                  break;
+                case 'email':
+                  _emailFontSize += details.delta.dx * 0.1;
+                  _emailFontSize = _emailFontSize.clamp(10, 60);
+                  break;
+                case 'mobile':
+                  _mobileFontSize += details.delta.dx * 0.1;
+                  _mobileFontSize = _mobileFontSize.clamp(10, 60);
+                  break;
+                case 'address':
+                  _addressFontSize += details.delta.dx * 0.1;
+                  _addressFontSize = _addressFontSize.clamp(10, 60);
+                  break;
+                case 'facebook':
+                  _facebookFontSize += details.delta.dx * 0.1;
+                  _facebookFontSize = _facebookFontSize.clamp(10, 60);
+                  break;
+                case 'linkedin':
+                  _linkedinFontSize += details.delta.dx * 0.1;
+                  _linkedinFontSize = _linkedinFontSize.clamp(10, 60);
+                  break;
+                case 'twitter':
+                  _twitterFontSize += details.delta.dx * 0.1;
+                  _twitterFontSize = _twitterFontSize.clamp(10, 60);
+                  break;
+                case 'instagram':
+                  _instagramFontSize += details.delta.dx * 0.1;
+                  _instagramFontSize = _instagramFontSize.clamp(10, 60);
+                  break;
+                case 'frame':
+                  _frameThickness += details.delta.dx * 0.2;
+                  _frameThickness = _frameThickness.clamp(2, 20);
+                  break;
               }
             });
           }
         },
         child: Container(
-          width: size.width +40,
-          height: size.height+40 ,
+          width: size.width + 40,
+          height: size.height + 40,
           decoration: BoxDecoration(
             border: Border.all(color: Colors.blueAccent, width: 2),
             borderRadius: BorderRadius.circular(8),
@@ -201,17 +254,25 @@ class _EditingPageState extends State<EditingPage> {
           child: Stack(
             clipBehavior: Clip.none,
             children: [
-              // Delete button
+              // Delete button for each element
               Positioned(
                 left: 0,
                 top: 0,
                 child: GestureDetector(
                   onTap: () {
                     setState(() {
-                      if (elementId == 'name') _showName = false;
-                      if (elementId == 'email') _showEmail = false;
-                      if (elementId == 'logo') _showLogo = false;
-                      if (elementId == 'frame') _showFrame = false;
+                      switch (elementId) {
+                        case 'name': _showName = false; break;
+                        case 'email': _showEmail = false; break;
+                        case 'mobile': _showMobile = false; break;
+                        case 'address': _showAddress = false; break;
+                        case 'facebook': _showFacebook = false; break;
+                        case 'linkedin': _showLinkedin = false; break;
+                        case 'twitter': _showTwitter = false; break;
+                        case 'instagram': _showInstagram = false; break;
+                        case 'logo': _showLogo = false; break;
+                        case 'frame': _showFrame = false; break;
+                      }
                       _selectedElement = null;
                     });
                   },
@@ -240,6 +301,7 @@ class _EditingPageState extends State<EditingPage> {
   }
 
 
+
   Widget _buildDraggableText({
     required String label,
     required Offset offset,
@@ -247,20 +309,21 @@ class _EditingPageState extends State<EditingPage> {
     required Function(Offset) onUpdateOffset,
     required Function(double) onUpdateFontSize,
     required String identifier,
-  })
-  {
+  }) {
     final textSize = (TextPainter(
       text: TextSpan(
         text: label,
         style: TextStyle(
-          color: identifier == 'name' ? _nameColor : _emailColor,
+          color: getTextColor(identifier),
           fontSize: fontSize,
-          fontFamily: identifier == 'name' ? _nameFontFamily : _emailFontFamily,
+          fontFamily: getFontFamily(identifier),
         ),
       ),
       maxLines: 1,
       textDirection: TextDirection.ltr,
     )..layout()).size;
+
+
 
     return Stack(
       children: [
@@ -270,18 +333,23 @@ class _EditingPageState extends State<EditingPage> {
           child: GestureDetector(
             onTap: () {
               setState(() {
-                _selectedElement = identifier;
+                _selectedElement = identifier; // This will set the selected element
               });
             },
             onScaleStart: (details) {
               _initialFocalPoint = details.focalPoint;
               _initialOffset = offset;
               _initialFontSize = fontSize;
-              _draggingElement = identifier;
+              _draggingElement = identifier; // Start dragging the selected element
             },
             onScaleUpdate: (details) {
               setState(() {
+                // Update position as user scales
                 onUpdateOffset(_initialOffset + (details.focalPoint - _initialFocalPoint));
+
+                // Dynamically adjust the font size during scaling
+                fontSize = _initialFontSize * details.scale; // Adjust font size based on scaling
+                fontSize = fontSize.clamp(10.0, 60.0); // Limit font size within a range
               });
             },
             onLongPressStart: (details) {
@@ -294,6 +362,7 @@ class _EditingPageState extends State<EditingPage> {
             },
             onLongPressMoveUpdate: (details) {
               setState(() {
+                // Update position as user moves on long press
                 onUpdateOffset(_initialOffset + (details.globalPosition - _initialFocalPoint));
               });
             },
@@ -301,56 +370,131 @@ class _EditingPageState extends State<EditingPage> {
             child: Text(
               label,
               style: TextStyle(
-                color: identifier == 'name' ? _nameColor : _emailColor,
+                color: getTextColor(identifier), // Use the dynamic color based on identifier
                 fontSize: fontSize,
-                fontFamily: identifier == 'name' ? _nameFontFamily : _emailFontFamily,
+                fontFamily: getFontFamily(identifier), // Use the dynamic font family based on identifier
               ),
             ),
           ),
         ),
         if (_selectedElement == identifier)
-          _buildSelectionBox(offset, textSize, identifier),
+          _buildSelectionBox(offset, textSize, identifier), // Show selection box if this element is selected
       ],
     );
+
+
+
+
   }
 
 
-  void _selectTextColor() async {
-    if (_selectedElement == 'name' || _selectedElement == 'email') {
-      Color pickedColor = await showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Pick a color'),
-          content: SingleChildScrollView(
-            child: BlockPicker(
-              pickerColor: Colors.white,
-              onColorChanged: (color) {
-                Navigator.of(context).pop(color);
-              },
-            ),
+  void _selectTextColor(String identifier) async {
+    final pickedColor = await showDialog<Color>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Pick a color'),
+        content: SingleChildScrollView(
+          child: BlockPicker(
+            pickerColor: getTextColor(identifier), // Use the getTextColor function to get the current color
+            onColorChanged: (color) => Navigator.of(context).pop(color),
           ),
         ),
-      );
+      ),
+    );
 
+    if (pickedColor != null) {
       setState(() {
-        // Update the color based on the selected text
-        if (_selectedElement == 'name') {
-          _nameColor = pickedColor;
-        } else if (_selectedElement == 'email') {
-          _emailColor = pickedColor;
+        // Update the appropriate color variable based on the identifier
+        switch (identifier) {
+          case 'name':
+            _nameColor = pickedColor;
+            break;
+          case 'email':
+            _emailColor = pickedColor;
+            break;
+          case 'mobile':
+            _mobileColor = pickedColor;
+            break;
+          case 'address':
+            _addressColor = pickedColor;
+            break;
+          case 'facebook':
+            _facebookColor = pickedColor;
+            break;
+          case 'linkedin':
+            _linkedinColor = pickedColor;
+            break;
+          case 'twitter':
+            _twitterColor = pickedColor;
+            break;
+          case 'instagram':
+            _instagramColor = pickedColor;
+            break;
         }
       });
     }
   }
 
 
+  Color getTextColor(String identifier) {
+    switch (identifier) {
+      case 'name':
+        return _nameColor;
+      case 'email':
+        return _emailColor;
+      case 'mobile':
+        return _mobileColor;
+      case 'address':
+        return _addressColor;
+      case 'facebook':
+        return _facebookColor;
+      case 'linkedin':
+        return _linkedinColor;
+      case 'twitter':
+        return _twitterColor;
+      case 'instagram':
+        return _instagramColor;
+      default:
+        return Colors.black;
+    }
+  }
+
+  String getFontFamily(String identifier) {
+    switch (identifier) {
+      case 'name':
+        return _nameFontFamily;
+      case 'email':
+        return _emailFontFamily;
+      case 'mobile':
+        return _mobileFontFamily;
+      case 'address':
+        return _addressFontFamily;
+      case 'facebook':
+        return _facebookFontFamily;
+      case 'linkedin':
+        return _linkedinFontFamily;
+      case 'twitter':
+        return _twitterFontFamily;
+      case 'instagram':
+        return _instagramFontFamily;
+
+      default:
+        return 'Roboto';
+    }
+  }
+
+
+
+
+
+
   void _selectTextFont() {
-    if (_selectedElement == 'name' || _selectedElement == 'email') {
+    if (_selectedElement != null) {
       showModalBottomSheet(
         context: context,
         builder: (context) {
-          return Container(
-            height: 150,
+          return SizedBox(
+            height: 200,
             child: ListView.builder(
               itemCount: _fontFamilies.length,
               itemBuilder: (context, index) {
@@ -361,11 +505,31 @@ class _EditingPageState extends State<EditingPage> {
                   ),
                   onTap: () {
                     setState(() {
-                      // Change font family based on selected text (name or email)
-                      if (_selectedElement == 'name') {
-                        _nameFontFamily = _fontFamilies[index];
-                      } else if (_selectedElement == 'email') {
-                        _emailFontFamily = _fontFamilies[index];
+                      switch (_selectedElement) {
+                        case 'name':
+                          _nameFontFamily = _fontFamilies[index];
+                          break;
+                        case 'email':
+                          _emailFontFamily = _fontFamilies[index];
+                          break;
+                        case 'mobile':
+                          _mobileFontFamily = _fontFamilies[index];
+                          break;
+                        case 'address':
+                          _addressFontFamily = _fontFamilies[index];
+                          break;
+                        case 'facebook':
+                          _facebookFontFamily = _fontFamilies[index];
+                          break;
+                        case 'linkedin':
+                          _linkedinFontFamily = _fontFamilies[index];
+                          break;
+                        case 'twitter':
+                          _twitterFontFamily = _fontFamilies[index];
+                          break;
+                        case 'instagram':
+                          _instagramFontFamily = _fontFamilies[index];
+                          break;
                       }
                     });
                     Navigator.pop(context);
@@ -378,6 +542,7 @@ class _EditingPageState extends State<EditingPage> {
       );
     }
   }
+
 
   Widget _buildDraggableFrame() {
     final Size frameSize = Size(_frameWidth, _frameHeight);
@@ -608,14 +773,64 @@ class _EditingPageState extends State<EditingPage> {
                             identifier: 'email',
                           ),
 
-                        // Display the delete icon if an element is being dragged
-                        if (_isDragging)
-                          Align(
-                            alignment: Alignment.bottomCenter,
-                            child: Padding(
-                              padding: const EdgeInsets.only(bottom: 20),
-                              child: Icon(Icons.delete, size: 60, color: Colors.redAccent),
-                            ),
+                        if(_showMobile)
+                          _buildDraggableText(
+                            label: widget.companyInfo.mobile,
+                            offset: _mobileOffset,
+                            fontSize: _mobileFontSize,
+                            onUpdateOffset: (val) => _mobileOffset = val,
+                            onUpdateFontSize: (val) => _mobileFontSize = val,
+                            identifier: 'mobile',
+                          ),
+
+                        if(_showAddress)
+                          _buildDraggableText(
+                            label: widget.companyInfo.address,
+                            offset: _addressOffset,
+                            fontSize: _addressFontSize,
+                            onUpdateOffset: (val) => _addressOffset = val,
+                            onUpdateFontSize: (val) => _addressFontSize = val,
+                            identifier: 'address',
+                          ),
+
+                        if(_showFacebook)
+                          _buildDraggableText(
+                            label: widget.companyInfo.facebook,
+                            offset: _facebookOffset,
+                            fontSize: _facebookFontSize,
+                            onUpdateOffset: (val) => _facebookOffset = val,
+                            onUpdateFontSize: (val) => _facebookFontSize = val,
+                            identifier: 'facebook',
+                          ),
+
+                        if(_showLinkedin)
+                          _buildDraggableText(
+                            label: widget.companyInfo.linkedin,
+                            offset: _linkedinOffset,
+                            fontSize: _linkedinFontSize,
+                            onUpdateOffset: (val) => _linkedinOffset = val,
+                            onUpdateFontSize: (val) => _linkedinFontSize = val,
+                            identifier: 'linkedin',
+                          ),
+
+                        if(_showTwitter)
+                          _buildDraggableText(
+                            label: widget.companyInfo.twitter,
+                            offset: _twitterOffset,
+                            fontSize: _twitterFontSize,
+                            onUpdateOffset: (val) => _twitterOffset = val,
+                            onUpdateFontSize: (val) => _twitterFontSize = val,
+                            identifier: 'twitter',
+                          ),
+
+                        if(_showInstagram)
+                          _buildDraggableText(
+                            label: widget.companyInfo.instagram,
+                            offset: _instagramOffset,
+                            fontSize: _instagramFontSize,
+                            onUpdateOffset: (val) => _instagramOffset = val,
+                            onUpdateFontSize: (val) => _instagramFontSize = val,
+                            identifier: 'instagram',
                           ),
                       ],
                     ),
@@ -633,7 +848,10 @@ class _EditingPageState extends State<EditingPage> {
               children: [
                 _buildBottomButton('Add photo', _pickPhoto),
                 _buildBottomButton('Frame', _selectFrame),
-                _buildBottomButton('Text Color', _selectTextColor),
+                _buildBottomButton('Text Color', () {
+                  _selectTextColor(_selectedElement!); // Update the color for the selected element
+                }),
+
                 _buildBottomButton('Text Font', _selectTextFont),
               ],
             ),
@@ -654,7 +872,7 @@ class _EditingPageState extends State<EditingPage> {
             scrollDirection: Axis.horizontal,
             itemCount: _frames.length,
             itemBuilder: (context, index) {
-             final String frameUrl = "http://192.168.8.139/practice_api/Frame_images/${_frames[index]}";
+             final String frameUrl = "http://172.27.229.66/practice_api/Frame_images/${_frames[index]}";
             //  final String frameUrl = "http://192.168.12.101/practice_api/Frame_images/servixo_logo.jpeg";
               return GestureDetector(
                 onTap: () {
@@ -680,6 +898,7 @@ class _EditingPageState extends State<EditingPage> {
       },
     );
   }
+
   Widget _buildBottomButton(String label, VoidCallback onPressed) {
     return ElevatedButton(
       onPressed: onPressed,
