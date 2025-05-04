@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:festival_card/SeeMorePage.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -81,9 +82,36 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: const Text('Festival card'),
         backgroundColor: Colors.amber[700],
-        actions: const [Icon(Icons.search)],
         leading: const Icon(Icons.menu),
+        actions: [
+          TextButton.icon(
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) => CompanyInfoSelectionDialog(
+                  companyInfo: CompanyInfo(
+                    name: widget.companyName,
+                    email: widget.email,
+                    mobile: widget.mobile,
+                    address: widget.address,
+                    facebook: widget.facebook,
+                    linkedin: widget.linkedin,
+                    twitter: widget.twitter,
+                    instagram: widget.instagram,
+                    logoPath: widget.logo,
+                  ),
+                ),
+              );
+            },
+            icon: const Icon(Icons.edit, color: Colors.white),
+            label: const Text(
+              'Customize',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
       ),
+
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView(
@@ -99,12 +127,6 @@ class _HomePageState extends State<HomePage> {
               border: Border.all(color: Colors.purple),
             ),
           ),
-
-          // ---------- Priority Categories ----------
-          for (var item in priorityTemplates)
-            _buildCategorySection(item['category'], item['templates']),
-
-          const SizedBox(height: 20),
 
           // ---------- General Category Section ----------
           const Text(
@@ -191,31 +213,15 @@ class _HomePageState extends State<HomePage> {
 
           const SizedBox(height: 30),
 
-          // ---------- Customize Button ----------
-          Align(
-            alignment: Alignment.centerRight,
-            child: ElevatedButton(
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (context) => CompanyInfoSelectionDialog(
-                    companyInfo: CompanyInfo(
-                      name: widget.companyName,
-                      email: widget.email,
-                      mobile: widget.mobile,
-                      address: widget.address,
-                      facebook: widget.facebook,
-                      linkedin: widget.linkedin,
-                      twitter: widget.twitter,
-                      instagram: widget.instagram,
-                      logoPath: widget.logo,
-                    ),
-                  ),
-                );
-              },
-              child: const Text('Customize'),
-            ),
-          ),
+          // ---------- Priority Categories ----------
+          for (var item in priorityTemplates)
+            _buildCategorySection(item['category'], item['templates']),
+
+          const SizedBox(height: 20),
+
+
+
+
         ],
       ),
     );
@@ -237,10 +243,19 @@ class _HomePageState extends State<HomePage> {
               ),
               TextButton(
                 onPressed: () {
-                  // Implement full view navigation if needed
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => SeeMorePage(
+                        categoryTitle: category,
+                        templates: templates,
+                      ),
+                    ),
+                  );
                 },
                 child: const Text('see more', style: TextStyle(color: Colors.purple)),
               ),
+
             ],
           ),
           const SizedBox(height: 8),
