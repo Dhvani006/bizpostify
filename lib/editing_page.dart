@@ -776,6 +776,8 @@ class _EditingPageState extends State<EditingPage> {
                             identifier: 'name',
                           ),
 
+
+
                         // Display the email if enabled
                         if (_showEmail)
                           _buildDraggableText(
