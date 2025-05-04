@@ -59,6 +59,13 @@ class _EditingPageState extends State<EditingPage> {
     'IndieFlower',
     'Quicksand',
     'Nunito',
+    'Caveat',
+    'Satisfy',
+    'AmaticSC',
+    'GreatVibes',
+    'ShadowsIntoLight',
+    'ArchitectsDaughter',
+    'Handlee'
   ];
   double _frameThickness = 4;
   bool _showFrame = true;
