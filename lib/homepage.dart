@@ -36,7 +36,12 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  List<dynamic> categories = [];
+  List<dynamic> priorityTemplates = [];
+  List<dynamic> masterCategories = [];
+  List<dynamic> selectedSubCategories = [];
+  List<dynamic> selectedTemplates = [];
+  String? selectedMaster;
+  String? selectedCategory;
   bool isLoading = true;
 
   @override
@@ -46,19 +51,25 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> fetchTemplates() async {
-    final url = Uri.parse('http://192.168.70.148/practice_api/viewTemplate.php'); // Replace with real path
+    const String apiUrl = 'http://172.27.61.186/practice_api/get_templates.php';
+
     try {
-      final response = await http.get(url);
+      final response = await http.get(Uri.parse(apiUrl));
+
       if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
         setState(() {
-          categories = json.decode(response.body);
+          priorityTemplates = data['priority'] ?? [];
+          masterCategories = data['general'] ?? [];
           isLoading = false;
         });
       } else {
-        throw Exception("Failed to load templates");
+        print('Failed to fetch templates');
+        setState(() => isLoading = false);
       }
     } catch (e) {
-      print("API Error: $e");
+      print('Error fetching templates: $e');
       setState(() => isLoading = false);
     }
   }
@@ -69,15 +80,15 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: const Text('Festival card'),
         backgroundColor: Colors.amber[700],
-        actions: [Icon(Icons.search)],
-        leading: Icon(Icons.menu),
+        actions: const [Icon(Icons.search)],
+        leading: const Icon(Icons.menu),
       ),
       body: isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator())
           : ListView(
         padding: const EdgeInsets.all(8),
         children: [
-          // Big top card
+          // Top banner
           Container(
             height: 200,
             margin: const EdgeInsets.symmetric(vertical: 8),
@@ -87,53 +98,99 @@ class _HomePageState extends State<HomePage> {
               border: Border.all(color: Colors.purple),
             ),
           ),
-          // Categories with templates
-          for (var item in categories)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Category name and see more
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        item['category'],
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          // Navigate to "see more" screen
-                        },
-                        child: const Text('see more', style: TextStyle(color: Colors.purple)),
-                      ),
-                    ],
+
+          // ---------- Priority Categories ----------
+          for (var item in priorityTemplates)
+            _buildCategorySection(item['category'], item['templates']),
+
+          const SizedBox(height: 20),
+
+          // ---------- General Category Section ----------
+          const Text(
+            'General Categories',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+
+          // Master Category buttons
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: masterCategories.map<Widget>((master) {
+              return ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: selectedMaster == master['master_category']
+                      ? Colors.purple
+                      : Colors.grey,
+                ),
+                onPressed: () {
+                  setState(() {
+                    selectedMaster = master['master_category'];
+                    selectedSubCategories = master['categories'];
+                    selectedCategory = null;
+                    selectedTemplates = [];
+                  });
+                },
+                child: Text(master['master_category']),
+              );
+            }).toList(),
+          ),
+
+          const SizedBox(height: 10),
+
+          // Subcategory buttons
+          if (selectedSubCategories.isNotEmpty)
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: selectedSubCategories.map<Widget>((cat) {
+                return OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    backgroundColor:
+                    selectedCategory == cat['category'] ? Colors.amber[200] : null,
                   ),
-                  const SizedBox(height: 8),
-                  // Templates preview (2 only)
-                  Row(
-                    children: [
-                      for (var imgPath in (item['templates'] as List).take(2))
-                        Expanded(
-                          child: Container(
-                            height: 100,
-                            margin: const EdgeInsets.only(right: 8),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10),
-                              image: DecorationImage(
-                                image: NetworkImage("http://192.168.70.148/practice_api/$imgPath"),
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ],
-              ),
+                  onPressed: () {
+                    setState(() {
+                      selectedCategory = cat['category'];
+                      selectedTemplates = cat['templates'];
+                    });
+                  },
+                  child: Text(cat['category']),
+                );
+              }).toList(),
             ),
-          // Customize button
+
+          const SizedBox(height: 10),
+
+          // Templates grid
+          if (selectedTemplates.isNotEmpty)
+            GridView.builder(
+              physics: const NeverScrollableScrollPhysics(),
+              shrinkWrap: true,
+              itemCount: selectedTemplates.length,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                mainAxisSpacing: 10,
+                crossAxisSpacing: 10,
+                childAspectRatio: 1,
+              ),
+              itemBuilder: (context, index) {
+                final imgPath = selectedTemplates[index];
+                return Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    image: DecorationImage(
+                      image: NetworkImage("http://172.27.61.186/practice_api/$imgPath"),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                );
+              },
+            ),
+
+          const SizedBox(height: 30),
+
+          // ---------- Customize Button ----------
           Align(
             alignment: Alignment.centerRight,
             child: ElevatedButton(
@@ -157,10 +214,55 @@ class _HomePageState extends State<HomePage> {
               },
               child: const Text('Customize'),
             ),
+          ),
+        ],
+      ),
+    );
+  }
 
+  Widget _buildCategorySection(String category, List<dynamic> templates) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Category title and See More
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                category,
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+              TextButton(
+                onPressed: () {
+                  // Implement full view navigation if needed
+                },
+                child: const Text('see more', style: TextStyle(color: Colors.purple)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
 
-
-          )
+          // 2 template preview
+          Row(
+            children: [
+              for (var imgPath in templates.take(2))
+                Expanded(
+                  child: Container(
+                    height: 100,
+                    margin: const EdgeInsets.only(right: 8),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      image: DecorationImage(
+                        image: NetworkImage("http://172.27.61.186/practice_api/$imgPath"),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ],
       ),
     );
