@@ -45,7 +45,21 @@ class _EditingPageState extends State<EditingPage> {
   String _twitterFontFamily = 'Roboto';
   String _instagramFontFamily = 'Roboto';
 
-  List<String> _fontFamilies = ['Roboto', 'Montserrat', 'Lobster', 'Pacifico'];
+  List<String> _fontFamilies = [
+    'Roboto',
+    'Montserrat',
+    'Lobster',
+    'Pacifico',
+    'Raleway',
+    'DancingScript',
+    'PlayfairDisplay',
+    'Oswald',
+    'Merriweather',
+    'BebasNeue',
+    'IndieFlower',
+    'Quicksand',
+    'Nunito',
+  ];
   double _frameThickness = 4;
   bool _showFrame = true;
   Offset _logoOffset = Offset(50, 50);
