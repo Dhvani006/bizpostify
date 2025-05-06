@@ -26,6 +26,48 @@ class EditingPage extends StatefulWidget {
 
 class _EditingPageState extends State<EditingPage> {
 
+  Map<String, bool> _isBoldMap = {
+    'name': false,
+    'email': false,
+    'mobile': false,
+    'address': false,
+    'facebook': false,
+    'linkedin': false,
+    'twitter': false,
+    'instagram': false,
+  };
+
+  Map<String, bool> _isItalicMap = {
+    'name': false,
+    'email': false,
+    'mobile': false,
+    'address': false,
+    'facebook': false,
+    'linkedin': false,
+    'twitter': false,
+    'instagram': false,
+  };
+
+
+  bool _isNameBold = false;
+  bool _isEmailBold = false;
+  bool _isMobileBold = false;
+  bool _isAddressBold = false;
+  bool _isFacebookBold = false;
+  bool _isLinkedinBold = false;
+  bool _isTwitterBold = false;
+  bool _isInstagramBold = false;
+
+  bool _isNameItalic = false;
+  bool _isEmailItalic = false;
+  bool _isMobileItalic = false;
+  bool _isAddressItalic = false;
+  bool _isFacebookItalic = false;
+  bool _isLinkedinItalic = false;
+  bool _isTwitterItalic = false;
+  bool _isInstagramItalic = false;
+
+
   final ScreenshotController _screenshotController = ScreenshotController();
   final GlobalKey _canvasKey = GlobalKey();
   Color _nameColor = Colors.white;
@@ -114,6 +156,35 @@ class _EditingPageState extends State<EditingPage> {
   bool _showInstagram = false;
   bool _showLogo = false;
 
+  bool getBold(String identifier) {
+    switch (identifier) {
+      case 'name': return _isNameBold;
+      case 'email': return _isEmailBold;
+      case 'mobile': return _isMobileBold;
+      case 'address': return _isAddressBold;
+      case 'facebook': return _isFacebookBold;
+      case 'linkedin': return _isLinkedinBold;
+      case 'twitter': return _isTwitterBold;
+      case 'instagram': return _isInstagramBold;
+      default: return false;
+    }
+  }
+
+  bool getItalic(String identifier) {
+    switch (identifier) {
+      case 'name': return _isNameItalic;
+      case 'email': return _isEmailItalic;
+      case 'mobile': return _isMobileItalic;
+      case 'address': return _isAddressItalic;
+      case 'facebook': return _isFacebookItalic;
+      case 'linkedin': return _isLinkedinItalic;
+      case 'twitter': return _isTwitterItalic;
+      case 'instagram': return _isInstagramItalic;
+      default: return false;
+    }
+  }
+
+
 
   @override
   void initState() {
@@ -187,6 +258,19 @@ class _EditingPageState extends State<EditingPage> {
       _draggingElement = null;
     });
   }
+
+  void _toggleBold(String identifier) {
+    setState(() {
+      _isBoldMap[identifier] = !_isBoldMap[identifier]!;
+    });
+  }
+
+  void _toggleItalic(String identifier) {
+    setState(() {
+      _isItalicMap[identifier] = !_isItalicMap[identifier]!;
+    });
+  }
+
 
   Future<void> _saveImage() async {
     var status = await Permission.storage.request();
@@ -338,6 +422,8 @@ class _EditingPageState extends State<EditingPage> {
           color: getTextColor(identifier),
           fontSize: fontSize,
           fontFamily: getFontFamily(identifier),
+          fontWeight: getBold(identifier) ? FontWeight.bold : FontWeight.normal,
+          fontStyle: getItalic(identifier) ? FontStyle.italic : FontStyle.normal,
         ),
       ),
       maxLines: 1,
@@ -393,7 +479,9 @@ class _EditingPageState extends State<EditingPage> {
               style: TextStyle(
                 color: getTextColor(identifier), // Use the dynamic color based on identifier
                 fontSize: fontSize,
-                fontFamily: getFontFamily(identifier), // Use the dynamic font family based on identifier
+                fontFamily: getFontFamily(identifier),
+                fontWeight: _isBoldMap[identifier]! ? FontWeight.bold : FontWeight.normal,
+                fontStyle: _isItalicMap[identifier]! ? FontStyle.italic : FontStyle.normal,// Use the dynamic font family based on identifier
               ),
             ),
           ),
@@ -402,10 +490,6 @@ class _EditingPageState extends State<EditingPage> {
           _buildSelectionBox(offset, textSize, identifier), // Show selection box if this element is selected
       ],
     );
-
-
-
-
   }
 
 
@@ -866,17 +950,26 @@ class _EditingPageState extends State<EditingPage> {
           Container(
             color: const Color(0xFFb6ae77),
             padding: const EdgeInsets.all(8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _buildBottomButton('Add photo', _pickPhoto),
-                _buildBottomButton('Frame', _selectFrame),
-                _buildBottomButton('Text Color', () {
-                  _selectTextColor(_selectedElement!); // Update the color for the selected element
-                }),
+            child: SingleChildScrollView( // Added scroll in case buttons overflow
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildBottomButton('Add photo', _pickPhoto),
+                  _buildBottomButton('Frame', _selectFrame),
+                  _buildBottomButton('Text Color', () {
+                    _selectTextColor(_selectedElement!); // Update the color for the selected element
+                  }),
+                  _buildBottomButton('Text Font', _selectTextFont),
+                  _buildBottomButton('Bold', () {
+                    if (_selectedElement != null) _toggleBold(_selectedElement!);
+                  }),
+                  _buildBottomButton('Italic', () {
+                    if (_selectedElement != null) _toggleItalic(_selectedElement!);
+                  }),
 
-                _buildBottomButton('Text Font', _selectTextFont),
-              ],
+                ],
+              ),
             ),
           ),
         ],
