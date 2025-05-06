@@ -24,7 +24,38 @@ class EditingPage extends StatefulWidget {
   _EditingPageState createState() => _EditingPageState();
 }
 
+class TextBox {
+  String text;
+  Offset offset;
+  double fontSize;
+  String fontFamily;
+  Color color;
+  bool isBold;
+  bool isItalic;
+
+  TextBox({
+    required this.text,
+    required this.offset,
+    this.fontSize = 20.0,
+    this.fontFamily = 'Roboto',
+    this.color = Colors.black,
+    this.isBold = false,
+    this.isItalic = false,
+  });
+}
+
+List<TextBox> _textBoxes = [];
+int? _selectedTextBoxIndex;
+
 class _EditingPageState extends State<EditingPage> {
+
+  void _addTextBox() {
+    setState(() {
+      _textBoxes.add(TextBox(offset: Offset(50, 50), text: 'Edit Me'));
+      _selectedTextBoxIndex = _textBoxes.length - 1;
+    });
+  }
+
 
   Map<String, bool> _isBoldMap = {
     'name': false,
@@ -491,6 +522,114 @@ class _EditingPageState extends State<EditingPage> {
       ],
     );
   }
+  Widget _buildDraggableTextBox(int index) {
+    final box = _textBoxes[index];
+    final isSelected = _selectedTextBoxIndex == index;
+
+    return Positioned(
+      left: box.offset.dx,
+      top: box.offset.dy,
+      child: GestureDetector(
+        onTap: () {
+          setState(() {
+            _selectedTextBoxIndex = index;
+          });
+        },
+        onScaleStart: (details) {
+          _initialFocalPoint = details.focalPoint;
+          _initialOffset = box.offset;
+          _initialFontSize = box.fontSize;
+        },
+        onScaleUpdate: (details) {
+          setState(() {
+            // Move text box
+            _textBoxes[index].offset = _initialOffset + (details.focalPoint - _initialFocalPoint);
+            // Resize text
+            double newSize = _initialFontSize * details.scale;
+            _textBoxes[index].fontSize = newSize.clamp(10.0, 60.0);
+          });
+        },
+        onLongPressStart: (details) {
+          _isDragging = true;
+          _initialOffset = box.offset;
+          _initialFocalPoint = details.globalPosition;
+        },
+        onLongPressMoveUpdate: (details) {
+          setState(() {
+            _textBoxes[index].offset = _initialOffset + (details.globalPosition - _initialFocalPoint);
+          });
+        },
+        onDoubleTap: () {
+          _editTextDialog(index); // Optional inline edit
+        },
+        child: Stack(
+          children: [
+            Text(
+              box.text,
+              style: TextStyle(
+                fontSize: box.fontSize,
+                fontFamily: box.fontFamily,
+                color: box.color,
+                fontWeight: box.isBold ? FontWeight.bold : FontWeight.normal,
+                fontStyle: box.isItalic ? FontStyle.italic : FontStyle.normal,
+              ),
+            ),
+            if (isSelected)
+              ...[
+                _buildSelectionBox(box.offset, Size(150, 40), "textBox_$index"),
+                // Delete button
+                Positioned(
+                  right: -20,
+                  top: -20,
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _textBoxes.removeAt(index);
+                        _selectedTextBoxIndex = null;
+                      });
+                    },
+                    child: CircleAvatar(
+                      radius: 12,
+                      backgroundColor: Colors.red,
+                      child: Icon(Icons.close, size: 14, color: Colors.white),
+                    ),
+                  ),
+                ),
+              ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _editTextDialog(int index) {
+    final controller = TextEditingController(text: _textBoxes[index].text);
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Edit Text'),
+          content: TextField(
+            controller: controller,
+            decoration: InputDecoration(hintText: 'Enter new text'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  _textBoxes[index].text = controller.text;
+                });
+                Navigator.pop(context);
+              },
+              child: Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
 
 
   void _selectTextColor(String identifier) async {
@@ -587,11 +726,6 @@ class _EditingPageState extends State<EditingPage> {
         return 'Roboto';
     }
   }
-
-
-
-
-
 
   void _selectTextFont() {
     if (_selectedElement != null) {
@@ -850,7 +984,7 @@ class _EditingPageState extends State<EditingPage> {
                         //     ),
                         //   ),
 
-                        if (_selectedFrameUrl != null)
+                if (_selectedFrameUrl != null)
                           _buildDraggableFrame(),
 
                         // Display the logo if enabled
@@ -939,6 +1073,8 @@ class _EditingPageState extends State<EditingPage> {
                             onUpdateFontSize: (val) => _instagramFontSize = val,
                             identifier: 'instagram',
                           ),
+                        for (int i = 0; i < _textBoxes.length; i++)
+                          _buildDraggableTextBox(i),
                       ],
                     ),
                   ),
@@ -967,7 +1103,7 @@ class _EditingPageState extends State<EditingPage> {
                   _buildBottomButton('Italic', () {
                     if (_selectedElement != null) _toggleItalic(_selectedElement!);
                   }),
-
+                  _buildBottomButton('TextBox', _addTextBox),
                 ],
               ),
             ),
@@ -988,8 +1124,8 @@ class _EditingPageState extends State<EditingPage> {
             scrollDirection: Axis.horizontal,
             itemCount: _frames.length,
             itemBuilder: (context, index) {
-             final String frameUrl = "http://172.27.229.66/practice_api/Frame_images/${_frames[index]}";
-            //  final String frameUrl = "http://192.168.12.101/practice_api/Frame_images/servixo_logo.jpeg";
+              final String frameUrl = "http://172.27.229.66/practice_api/Frame_images/${_frames[index]}";
+              //  final String frameUrl = "http://192.168.12.101/practice_api/Frame_images/servixo_logo.jpeg";
               return GestureDetector(
                 onTap: () {
                   setState(() {
@@ -1031,4 +1167,7 @@ class _EditingPageState extends State<EditingPage> {
       ),
     );
   }
+
+
+
 }
