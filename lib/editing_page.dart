@@ -24,37 +24,48 @@ class EditingPage extends StatefulWidget {
   _EditingPageState createState() => _EditingPageState();
 }
 
+List<TextBox> _textBoxes = [];
+
 class TextBox {
   String text;
   Offset offset;
   double fontSize;
-  String fontFamily;
   Color color;
+  String fontFamily;
   bool isBold;
   bool isItalic;
 
   TextBox({
     required this.text,
     required this.offset,
-    this.fontSize = 20.0,
+    required this.fontSize,
+    this.color = Colors.white,
     this.fontFamily = 'Roboto',
-    this.color = Colors.black,
     this.isBold = false,
     this.isItalic = false,
   });
 }
 
-List<TextBox> _textBoxes = [];
+
+
 int? _selectedTextBoxIndex;
 
 class _EditingPageState extends State<EditingPage> {
 
   void _addTextBox() {
     setState(() {
-      _textBoxes.add(TextBox(offset: Offset(50, 50), text: 'Edit Me'));
+      _textBoxes.add(
+        TextBox(
+          text: 'New Text',
+          offset: const Offset(100, 100),
+          fontSize: 20,
+        ),
+      );
+      _selectedElement = 'textBox';
       _selectedTextBoxIndex = _textBoxes.length - 1;
     });
   }
+
 
 
   Map<String, bool> _isBoldMap = {
@@ -292,15 +303,24 @@ class _EditingPageState extends State<EditingPage> {
 
   void _toggleBold(String identifier) {
     setState(() {
-      _isBoldMap[identifier] = !_isBoldMap[identifier]!;
+      if (identifier == 'textBox') {
+        _textBoxes[_selectedTextBoxIndex!].isBold = !_textBoxes[_selectedTextBoxIndex!].isBold;
+      } else {
+        _isBoldMap[identifier] = !_isBoldMap[identifier]!;
+      }
     });
   }
 
   void _toggleItalic(String identifier) {
     setState(() {
-      _isItalicMap[identifier] = !_isItalicMap[identifier]!;
+      if (identifier == 'textBox') {
+        _textBoxes[_selectedTextBoxIndex!].isItalic = !_textBoxes[_selectedTextBoxIndex!].isItalic;
+      } else {
+        _isItalicMap[identifier] = !_isItalicMap[identifier]!;
+      }
     });
   }
+
 
 
   Future<void> _saveImage() async {
@@ -524,7 +544,7 @@ class _EditingPageState extends State<EditingPage> {
   }
   Widget _buildDraggableTextBox(int index) {
     final box = _textBoxes[index];
-    final isSelected = _selectedTextBoxIndex == index;
+    final isSelected = _selectedElement == 'textBox' && _selectedTextBoxIndex == index;
 
     return Positioned(
       left: box.offset.dx,
@@ -532,6 +552,7 @@ class _EditingPageState extends State<EditingPage> {
       child: GestureDetector(
         onTap: () {
           setState(() {
+            _selectedElement = 'textBox';
             _selectedTextBoxIndex = index;
           });
         },
@@ -542,11 +563,8 @@ class _EditingPageState extends State<EditingPage> {
         },
         onScaleUpdate: (details) {
           setState(() {
-            // Move text box
-            _textBoxes[index].offset = _initialOffset + (details.focalPoint - _initialFocalPoint);
-            // Resize text
-            double newSize = _initialFontSize * details.scale;
-            _textBoxes[index].fontSize = newSize.clamp(10.0, 60.0);
+            box.offset = _initialOffset + (details.focalPoint - _initialFocalPoint);
+            box.fontSize = (_initialFontSize * details.scale).clamp(10.0, 100.0);
           });
         },
         onLongPressStart: (details) {
@@ -556,12 +574,13 @@ class _EditingPageState extends State<EditingPage> {
         },
         onLongPressMoveUpdate: (details) {
           setState(() {
-            _textBoxes[index].offset = _initialOffset + (details.globalPosition - _initialFocalPoint);
+            box.offset = _initialOffset + (details.globalPosition - _initialFocalPoint);
           });
         },
-        onDoubleTap: () {
-          _editTextDialog(index); // Optional inline edit
+        onLongPressEnd: (details) {
+          _isDragging = false;
         },
+        onDoubleTap: () => _editTextDialog(index),
         child: Stack(
           children: [
             Text(
@@ -575,27 +594,24 @@ class _EditingPageState extends State<EditingPage> {
               ),
             ),
             if (isSelected)
-              ...[
-                _buildSelectionBox(box.offset, Size(150, 40), "textBox_$index"),
-                // Delete button
-                Positioned(
-                  right: -20,
-                  top: -20,
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _textBoxes.removeAt(index);
-                        _selectedTextBoxIndex = null;
-                      });
-                    },
-                    child: CircleAvatar(
-                      radius: 12,
-                      backgroundColor: Colors.red,
-                      child: Icon(Icons.close, size: 14, color: Colors.white),
-                    ),
+              Positioned(
+                right: -20,
+                top: -20,
+                child: GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _textBoxes.removeAt(index);
+                      _selectedTextBoxIndex = null;
+                      _selectedElement = null;
+                    });
+                  },
+                  child: const CircleAvatar(
+                    radius: 12,
+                    backgroundColor: Colors.red,
+                    child: Icon(Icons.close, size: 14, color: Colors.white),
                   ),
                 ),
-              ],
+              ),
           ],
         ),
       ),
@@ -639,7 +655,9 @@ class _EditingPageState extends State<EditingPage> {
         title: Text('Pick a color'),
         content: SingleChildScrollView(
           child: BlockPicker(
-            pickerColor: getTextColor(identifier), // Use the getTextColor function to get the current color
+            pickerColor: identifier == 'textBox'
+                ? _textBoxes[_selectedTextBoxIndex!].color
+                : getTextColor(identifier),
             onColorChanged: (color) => Navigator.of(context).pop(color),
           ),
         ),
@@ -648,6 +666,9 @@ class _EditingPageState extends State<EditingPage> {
 
     if (pickedColor != null) {
       setState(() {
+        if (identifier == 'textBox') {
+          _textBoxes[_selectedTextBoxIndex!].color = pickedColor;
+        } else {
         // Update the appropriate color variable based on the identifier
         switch (identifier) {
           case 'name':
@@ -675,7 +696,7 @@ class _EditingPageState extends State<EditingPage> {
             _instagramColor = pickedColor;
             break;
         }
-      });
+      }});
     }
   }
 
@@ -744,31 +765,37 @@ class _EditingPageState extends State<EditingPage> {
                   ),
                   onTap: () {
                     setState(() {
-                      switch (_selectedElement) {
-                        case 'name':
-                          _nameFontFamily = _fontFamilies[index];
-                          break;
-                        case 'email':
-                          _emailFontFamily = _fontFamilies[index];
-                          break;
-                        case 'mobile':
-                          _mobileFontFamily = _fontFamilies[index];
-                          break;
-                        case 'address':
-                          _addressFontFamily = _fontFamilies[index];
-                          break;
-                        case 'facebook':
-                          _facebookFontFamily = _fontFamilies[index];
-                          break;
-                        case 'linkedin':
-                          _linkedinFontFamily = _fontFamilies[index];
-                          break;
-                        case 'twitter':
-                          _twitterFontFamily = _fontFamilies[index];
-                          break;
-                        case 'instagram':
-                          _instagramFontFamily = _fontFamilies[index];
-                          break;
+                      if (_selectedElement == 'textBox' && _selectedTextBoxIndex != null) {
+                        _textBoxes[_selectedTextBoxIndex!].fontFamily = _fontFamilies[index];
+                      } else {
+                        switch (_selectedElement) {
+                          case 'name':
+                            _nameFontFamily = _fontFamilies[index];
+                            break;
+                          case 'email':
+                            _emailFontFamily = _fontFamilies[index];
+                            break;
+                          case 'mobile':
+                            _mobileFontFamily = _fontFamilies[index];
+                            break;
+                          case 'address':
+                            _addressFontFamily = _fontFamilies[index];
+                            break;
+                          case 'facebook':
+                            _facebookFontFamily = _fontFamilies[index];
+                            break;
+                          case 'linkedin':
+                            _linkedinFontFamily = _fontFamilies[index];
+                            break;
+                          case 'twitter':
+                            _twitterFontFamily = _fontFamilies[index];
+                            break;
+                          case 'instagram':
+                            _instagramFontFamily = _fontFamilies[index];
+                            break;
+                          default:
+                            break;
+                        }
                       }
                     });
                     Navigator.pop(context);
@@ -781,6 +808,7 @@ class _EditingPageState extends State<EditingPage> {
       );
     }
   }
+
 
 
   Widget _buildDraggableFrame() {
@@ -1094,15 +1122,30 @@ class _EditingPageState extends State<EditingPage> {
                   _buildBottomButton('Add photo', _pickPhoto),
                   _buildBottomButton('Frame', _selectFrame),
                   _buildBottomButton('Text Color', () {
-                    _selectTextColor(_selectedElement!); // Update the color for the selected element
+                    if (_selectedTextBoxIndex != null) {
+                      _selectTextColor('textBox');
+                    } else if (_selectedElement != null) {
+                      _selectTextColor(_selectedElement!);
+                    }
                   }),
+
                   _buildBottomButton('Text Font', _selectTextFont),
                   _buildBottomButton('Bold', () {
-                    if (_selectedElement != null) _toggleBold(_selectedElement!);
+                    if (_selectedTextBoxIndex != null) {
+                      _toggleBold('textBox');
+                    } else if (_selectedElement != null) {
+                      _toggleBold(_selectedElement!);
+                    }
                   }),
+
                   _buildBottomButton('Italic', () {
-                    if (_selectedElement != null) _toggleItalic(_selectedElement!);
+                    if (_selectedTextBoxIndex != null) {
+                      _toggleItalic('textBox');
+                    } else if (_selectedElement != null) {
+                      _toggleItalic(_selectedElement!);
+                    }
                   }),
+
                   _buildBottomButton('TextBox', _addTextBox),
                 ],
               ),
