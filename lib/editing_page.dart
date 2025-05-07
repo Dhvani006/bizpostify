@@ -74,9 +74,7 @@ class _EditingPageState extends State<EditingPage> {
       _selectedElement = 'textBox';
     });
   }
-
-
-
+  bool _showFrame = true;
 
   Map<String, bool> _isBoldMap = {
     'name': false,
@@ -119,7 +117,7 @@ class _EditingPageState extends State<EditingPage> {
   bool _isTwitterItalic = false;
   bool _isInstagramItalic = false;
 
-
+  bool _isSelected = false;
   final ScreenshotController _screenshotController = ScreenshotController();
   final GlobalKey _canvasKey = GlobalKey();
   Color _nameColor = Colors.white;
@@ -436,6 +434,7 @@ class _EditingPageState extends State<EditingPage> {
                         case 'frame': break;
                       }
                       _selectedElement = null;
+                      _isSelected = false;
                     });
                   },
                   child: CircleAvatar(
@@ -847,7 +846,9 @@ class _EditingPageState extends State<EditingPage> {
 
   Widget _buildDraggableFrame() {
     final Size frameSize = Size(_frameWidth, _frameHeight);
-    bool _isSelected = false;
+
+    if (!_showFrame) return SizedBox.shrink(); // Don't show if deleted
+
     return Stack(
       children: [
         Positioned(
@@ -890,11 +891,11 @@ class _EditingPageState extends State<EditingPage> {
                   height: _frameHeight,
                   decoration: BoxDecoration(
                     border: Border.all(
-                      color:  _isSelected ? Colors.red : Colors.transparent,
+                      color: _isSelected ? Colors.red : Colors.transparent,
                       width: 5.0,
                     ),
                     image: DecorationImage(
-                      image: NetworkImage(_selectedFrameUrl!), // Assuming _frameImageUrl is not null
+                      image: NetworkImage(_selectedFrameUrl!),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -911,7 +912,6 @@ class _EditingPageState extends State<EditingPage> {
                           _frameWidth += details.delta.dx;
                           _frameHeight += details.delta.dy;
 
-                          // Limit size
                           _frameWidth = _frameWidth.clamp(50.0, 500.0);
                           _frameHeight = _frameHeight.clamp(50.0, 500.0);
                         });
@@ -923,6 +923,7 @@ class _EditingPageState extends State<EditingPage> {
                       ),
                     ),
                   ),
+
                 // Close (delete) button
                 if (_selectedElement == 'frame')
                   Positioned(
@@ -932,6 +933,9 @@ class _EditingPageState extends State<EditingPage> {
                       onTap: () {
                         setState(() {
                           _selectedElement = null;
+                          _isSelected = false;
+                          _showFrame = false;
+                          // Fully remove the frame
                         });
                       },
                       child: CircleAvatar(
@@ -948,6 +952,7 @@ class _EditingPageState extends State<EditingPage> {
       ],
     );
   }
+
 
 
   Widget _buildDraggableLogo() {
