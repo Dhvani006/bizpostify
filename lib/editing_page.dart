@@ -29,8 +29,10 @@ List<TextBox> _textBoxes = [];
 class TextBox {
   String text;
   Offset offset;
-  double fontSize;
+  double width;
+  double height;
   Color color;
+  double fontSize;
   String fontFamily;
   bool isBold;
   bool isItalic;
@@ -38,11 +40,13 @@ class TextBox {
   TextBox({
     required this.text,
     required this.offset,
+    required this.width,
+    required this.height,
+    required this.color,
     required this.fontSize,
-    this.color = Colors.white,
-    this.fontFamily = 'Roboto',
-    this.isBold = false,
-    this.isItalic = false,
+    required this.fontFamily,
+    required this.isBold,
+    required this.isItalic,
   });
 }
 
@@ -52,19 +56,25 @@ int? _selectedTextBoxIndex;
 
 class _EditingPageState extends State<EditingPage> {
 
+
   void _addTextBox() {
     setState(() {
-      _textBoxes.add(
-        TextBox(
-          text: 'New Text',
-          offset: const Offset(100, 100),
-          fontSize: 20,
-        ),
-      );
-      _selectedElement = 'textBox';
+      _textBoxes.add(TextBox(
+        text: 'New Text',
+        offset: Offset(100, 100),
+        fontSize: 20,
+        width: 150,
+        height: 50,
+        fontFamily: 'Arial',
+        color: Colors.white,
+        isBold: false,
+        isItalic: false,
+      ));
       _selectedTextBoxIndex = _textBoxes.length - 1;
+      _selectedElement = 'textBox';
     });
   }
+
 
 
 
@@ -152,7 +162,6 @@ class _EditingPageState extends State<EditingPage> {
     'Handlee'
   ];
   double _frameThickness = 4;
-  bool _showFrame = true;
   Offset _logoOffset = Offset(50, 50);
   Offset _nameOffset = Offset(50, 200);
   Offset _emailOffset = Offset(50, 250);
@@ -175,11 +184,9 @@ class _EditingPageState extends State<EditingPage> {
   double _twitterFontSize = 16;
   double _instagramFontSize = 16;
 
-  bool _isDragging = false;
   String? _draggingElement;
   Offset _initialFocalPoint = Offset.zero;
   Offset _initialOffset = Offset.zero;
-  double _initialSize = 1.0;
   double _initialFontSize = 1.0;
 
   File? _pickedPhoto;
@@ -296,7 +303,6 @@ class _EditingPageState extends State<EditingPage> {
       });
     }
     setState(() {
-      _isDragging = false;
       _draggingElement = null;
     });
   }
@@ -427,7 +433,7 @@ class _EditingPageState extends State<EditingPage> {
                         case 'twitter': _showTwitter = false; break;
                         case 'instagram': _showInstagram = false; break;
                         case 'logo': _showLogo = false; break;
-                        case 'frame': _showFrame = false; break;
+                        case 'frame': break;
                       }
                       _selectedElement = null;
                     });
@@ -512,7 +518,6 @@ class _EditingPageState extends State<EditingPage> {
             },
             onLongPressStart: (details) {
               setState(() {
-                _isDragging = true;
                 _draggingElement = identifier;
                 _initialOffset = offset;
                 _initialFocalPoint = details.globalPosition;
@@ -568,7 +573,6 @@ class _EditingPageState extends State<EditingPage> {
           });
         },
         onLongPressStart: (details) {
-          _isDragging = true;
           _initialOffset = box.offset;
           _initialFocalPoint = details.globalPosition;
         },
@@ -577,22 +581,32 @@ class _EditingPageState extends State<EditingPage> {
             box.offset = _initialOffset + (details.globalPosition - _initialFocalPoint);
           });
         },
-        onLongPressEnd: (details) {
-          _isDragging = false;
-        },
         onDoubleTap: () => _editTextDialog(index),
         child: Stack(
+          clipBehavior: Clip.none,
           children: [
-            Text(
-              box.text,
-              style: TextStyle(
-                fontSize: box.fontSize,
-                fontFamily: box.fontFamily,
-                color: box.color,
-                fontWeight: box.isBold ? FontWeight.bold : FontWeight.normal,
-                fontStyle: box.isItalic ? FontStyle.italic : FontStyle.normal,
+            Container(
+              width: box.width,
+              height: box.height,
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                border: isSelected ? Border.all(color: Colors.blueAccent) : null,
+                color: Colors.transparent,
+              ),
+              child: Text(
+                box.text,
+                maxLines: null,
+                overflow: TextOverflow.visible,
+                style: TextStyle(
+                  fontSize: box.fontSize,
+                  fontFamily: box.fontFamily,
+                  color: box.color,
+                  fontWeight: box.isBold ? FontWeight.bold : FontWeight.normal,
+                  fontStyle: box.isItalic ? FontStyle.italic : FontStyle.normal,
+                ),
               ),
             ),
+
             if (isSelected)
               Positioned(
                 right: -20,
@@ -612,11 +626,35 @@ class _EditingPageState extends State<EditingPage> {
                   ),
                 ),
               ),
+
+
+            // Delete button
+            if (isSelected)
+              Positioned(
+                right: -10,
+                bottom: -10,
+                child: GestureDetector(
+                  onPanUpdate: (details) {
+                    setState(() {
+                      box.width += details.delta.dx;
+                      box.height += details.delta.dy;
+                      box.width = box.width.clamp(50.0, 500.0);
+                      box.height = box.height.clamp(50.0, 500.0);
+                    });
+                  },
+                  child: CircleAvatar(
+                    radius: 14,
+                    backgroundColor: Colors.blue,
+                    child: Icon(Icons.zoom_out_map, size: 16, color: Colors.white),
+                  ),
+                ),
+              ),
           ],
         ),
       ),
     );
   }
+
 
   void _editTextDialog(int index) {
     final controller = TextEditingController(text: _textBoxes[index].text);
@@ -644,8 +682,6 @@ class _EditingPageState extends State<EditingPage> {
       },
     );
   }
-
-
 
 
   void _selectTextColor(String identifier) async {
@@ -809,8 +845,6 @@ class _EditingPageState extends State<EditingPage> {
     }
   }
 
-
-
   Widget _buildDraggableFrame() {
     final Size frameSize = Size(_frameWidth, _frameHeight);
     bool _isSelected = false;
@@ -838,7 +872,6 @@ class _EditingPageState extends State<EditingPage> {
             },
             onLongPressStart: (details) {
               setState(() {
-                _isDragging = true;
                 _draggingElement = 'frame';
                 _initialOffset = _frameOffset;
                 _initialFocalPoint = details.globalPosition;
@@ -898,7 +931,6 @@ class _EditingPageState extends State<EditingPage> {
                     child: GestureDetector(
                       onTap: () {
                         setState(() {
-                          _showFrame = false;
                           _selectedElement = null;
                         });
                       },
@@ -933,7 +965,6 @@ class _EditingPageState extends State<EditingPage> {
             onScaleStart: (details) {
               _initialFocalPoint = details.focalPoint;
               _initialOffset = _logoOffset;
-              _initialSize = _logoSize;
               _draggingElement = 'logo';
             },
             onScaleUpdate: (details) {
@@ -943,7 +974,6 @@ class _EditingPageState extends State<EditingPage> {
             },
             onLongPressStart: (details) {
               setState(() {
-                _isDragging = true;
                 _draggingElement = 'logo';
                 _initialOffset = _logoOffset;
                 _initialFocalPoint = details.globalPosition;
@@ -1156,7 +1186,6 @@ class _EditingPageState extends State<EditingPage> {
     );
   }
 
-
   void _selectFrame() {
     showModalBottomSheet(
       context: context,
@@ -1210,7 +1239,5 @@ class _EditingPageState extends State<EditingPage> {
       ),
     );
   }
-
-
 
 }
