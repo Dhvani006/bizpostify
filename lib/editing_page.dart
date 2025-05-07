@@ -44,7 +44,7 @@ class _EditingPageState extends State<EditingPage> {
   String _linkedinFontFamily = 'Roboto';
   String _twitterFontFamily = 'Roboto';
   String _instagramFontFamily = 'Roboto';
-
+  List<dynamic> _selectedFrameElements = [];
   List<String> _fontFamilies = [
     'Roboto',
     'Montserrat',
@@ -101,7 +101,7 @@ class _EditingPageState extends State<EditingPage> {
   File? _pickedPhoto;
   String? _selectedElement;
 
-  List<String> _frames = [];
+  List<Map<String, dynamic>> _frames = [];
   String? _selectedFrameUrl;
 
   bool _showName = false;
@@ -129,24 +129,186 @@ class _EditingPageState extends State<EditingPage> {
     _showInstagram = widget.selectedFields['instagram'] == true;
     _showLogo = widget.selectedFields['logo'] == true;
 
-    _fetchFrames();
+
   }
 
-  Future<void> _fetchFrames() async {
-    try {
-      final uri = "http://172.27.229.66/practice_api/viewFrame.php";
-      final res = await http.get(Uri.parse(uri));
-      if (res.statusCode == 200) {
-        List<dynamic> data = jsonDecode(res.body);
-        setState(() {
-          _frames = data.map((item) => item['img'] as String).toList();
-        });
-      } else {
-        print("Failed to load frames");
-      }
-    } catch (e) {
-      print("Error fetching frames: $e");
+  // Future<void> _fetchFrames() async {
+  //   try {
+  //     final uri = "http://172.27.229.66/practice_api/viewFrame.php";
+  //     final res = await http.get(Uri.parse(uri));
+  //     if (res.statusCode == 200) {
+  //       List<dynamic> data = jsonDecode(res.body);
+  //       setState(() {
+  //         _frames = data.map((item) => item['img'] as String).toList();
+  //       });
+  //     } else {
+  //       print("Failed to load frames");
+  //     }
+  //   } catch (e) {
+  //     print("Error fetching frames: $e");
+  //   }
+  // }
+
+
+  void _selectFrame() async {
+    await _fetchAllFrames(); // Load frames from API first
+
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return Container(
+          height: 100,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: _frames.length,
+            itemBuilder: (context, index) {
+              final frame = _frames[index];
+              final String frameUrl = "http://172.24.212.186/practice_api/Frame_images/${frame['img']}";
+
+              return GestureDetector(
+                onTap: () async {
+                  final frameId = int.tryParse(frame['id'].toString());
+                  print(frameId);
+                  if (frameId == null) {
+                    print("Frame ID is missing!");
+                    print("hello");
+                    return;
+                  }
+
+                  final frameDetails = await _fetchFrameDetails(frameId);
+                  print("dhvaniiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii");
+                  setState(() {
+                    _selectedFrameUrl = frameUrl;
+                    _selectedFrameElements = frameDetails['elements'];
+                  });
+                  print("hmmm");
+                  Navigator.pop(context);
+                },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: SizedBox(
+                    width: 200,
+                    height: 150,
+                    child: Image.network(frameUrl),
+                  ),
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+// Fetch frame details including the elements for positioning
+  Future<Map<String, dynamic>> _fetchFrameDetails(int frameId) async {
+    final uri = "http://172.24.212.186/practice_api/viewFrame.php?id=$frameId";
+    final res = await http.get(Uri.parse(uri));
+    if (res.statusCode == 200) {
+      print("hey");
+      return jsonDecode(res.body);
+
+    } else {
+      print("heloooooooooooooooooooooooooooooo");
+      throw Exception('Failed to load frame details');
     }
+  }
+
+  Future<void> _fetchAllFrames() async {
+    final uri = "http://172.24.212.186/practice_api/getAllFrames.php";
+    final res = await http.get(Uri.parse(uri));
+    if (res.statusCode == 200) {
+      final List<Map<String, dynamic>> frameList =
+      List<Map<String, dynamic>>.from(jsonDecode(res.body));
+      setState(() {
+        _frames = frameList;
+      });
+    } else {
+      throw Exception("Failed to load frames");
+    }
+  }
+
+// Build the frame UI with positioned elements
+  Widget buildFrameWithElements() {
+    final GlobalKey _frameKey = GlobalKey();
+    double _frameHeight = 0;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final containerWidth = constraints.maxWidth;
+        final containerHeight = constraints.maxHeight;
+
+        const frameOriginalWidth = 1080; // Width of frame image in pixels
+        const frameOriginalHeight = 200; // Height of frame image in pixels
+
+        final scaleX = containerWidth / frameOriginalWidth;
+        final scaleY = containerHeight / frameOriginalHeight;
+
+
+
+        return StatefulBuilder(
+          builder: (context, setState) {
+            // Function to handle image loading and updating the height
+            void _onImageLoaded() {
+              // Delay the height calculation until the widget has been laid out.
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                final RenderBox? renderBox =
+                _frameKey.currentContext!.findRenderObject() as RenderBox?;
+                if (renderBox != null) {
+                  setState(() {
+                    _frameHeight = renderBox.size.height;
+                  });
+                }
+              });
+            }
+
+            return Stack(
+              children: [
+                // Frame image pinned to bottom
+                Positioned(
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  child: Image.network(
+                    _selectedFrameUrl!,
+                    key: _frameKey,
+                    width: containerWidth,
+                    fit: BoxFit.fitWidth,
+                    height: _frameHeight == 0 ? null : _frameHeight,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) {
+                        _onImageLoaded();
+                      }
+                      return child;
+                    },
+                  ),
+                ),
+
+                // Texts positioned relative to the frame image
+                ..._selectedFrameElements.map((element) {
+                  final double posX = double.tryParse(element['pos_x'] ?? '0')! * scaleX;
+                  final double posY = (double.tryParse(element['pos_y'] ?? '0')!-16) * scaleX; // Use scaleX to keep ratio correct
+                  final double fontSize = double.tryParse(element['font_size'] ?? '14')! * scaleX;
+
+
+                  return Positioned(
+                    left: posX,
+                    top: containerHeight - _frameHeight + posY, // position relative to frame at bottom
+                    child: Text(
+                      element['element_type'] ?? '',
+                      style: TextStyle(
+                        fontSize: fontSize,
+                        color: Color(int.parse('0xff${element['font_color']?.substring(1)}')),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   Future<void> _pickPhoto() async {
@@ -456,7 +618,6 @@ class _EditingPageState extends State<EditingPage> {
     }
   }
 
-
   Color getTextColor(String identifier) {
     switch (identifier) {
       case 'name':
@@ -503,11 +664,6 @@ class _EditingPageState extends State<EditingPage> {
         return 'Roboto';
     }
   }
-
-
-
-
-
 
   void _selectTextFont() {
     if (_selectedElement != null) {
@@ -563,7 +719,6 @@ class _EditingPageState extends State<EditingPage> {
       );
     }
   }
-
 
   Widget _buildDraggableFrame() {
     final Size frameSize = Size(_frameWidth, _frameHeight);
@@ -671,7 +826,6 @@ class _EditingPageState extends State<EditingPage> {
     );
   }
 
-
   Widget _buildDraggableLogo() {
     return Stack(
       children: [
@@ -767,7 +921,7 @@ class _EditingPageState extends State<EditingPage> {
                         //   ),
 
                         if (_selectedFrameUrl != null)
-                          _buildDraggableFrame(),
+                          buildFrameWithElements(),
 
                         // Display the logo if enabled
                         if (_showLogo) _buildDraggableLogo(),
@@ -782,8 +936,6 @@ class _EditingPageState extends State<EditingPage> {
                             onUpdateFontSize: (val) => _nameFontSize = val,
                             identifier: 'name',
                           ),
-
-
 
                         // Display the email if enabled
                         if (_showEmail)
@@ -885,42 +1037,42 @@ class _EditingPageState extends State<EditingPage> {
   }
 
 
-  void _selectFrame() {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) {
-        return Container(
-          height: 100,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: _frames.length,
-            itemBuilder: (context, index) {
-             final String frameUrl = "http://172.27.229.66/practice_api/Frame_images/${_frames[index]}";
-            //  final String frameUrl = "http://192.168.12.101/practice_api/Frame_images/servixo_logo.jpeg";
-              return GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _selectedFrameUrl = frameUrl; // Set the selected frame
-                  });
-                  Navigator.pop(context);
-                },
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: SizedBox( // 👈 added SizedBox
-                    width: 200,     // 👈 set width small
-                    height: 150,    //  set height small
-                    child: Image.network(
-                      frameUrl,
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-        );
-      },
-    );
-  }
+  // void _selectFrame() {
+  //   showModalBottomSheet(
+  //     context: context,
+  //     builder: (context) {
+  //       return Container(
+  //         height: 100,
+  //         child: ListView.builder(
+  //           scrollDirection: Axis.horizontal,
+  //           itemCount: _frames.length,
+  //           itemBuilder: (context, index) {
+  //            final String frameUrl = "http://172.27.229.66/practice_api/Frame_images/${_frames[index]}";
+  //           //  final String frameUrl = "http://192.168.12.101/practice_api/Frame_images/servixo_logo.jpeg";
+  //             return GestureDetector(
+  //               onTap: () {
+  //                 setState(() {
+  //                   _selectedFrameUrl = frameUrl; // Set the selected frame
+  //                 });
+  //                 Navigator.pop(context);
+  //               },
+  //               child: Padding(
+  //                 padding: const EdgeInsets.symmetric(horizontal: 8),
+  //                 child: SizedBox( // 👈 added SizedBox
+  //                   width: 200,     // 👈 set width small
+  //                   height: 150,    //  set height small
+  //                   child: Image.network(
+  //                     frameUrl,
+  //                   ),
+  //                 ),
+  //               ),
+  //             );
+  //           },
+  //         ),
+  //       );
+  //     },
+  //   );
+  // }
 
   Widget _buildBottomButton(String label, VoidCallback onPressed) {
     return ElevatedButton(
