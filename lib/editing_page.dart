@@ -27,28 +27,29 @@ class EditingPage extends StatefulWidget {
 List<TextBox> _textBoxes = [];
 
 class TextBox {
-  String text;
   Offset offset;
   double width;
   double height;
-  Color color;
+  String text;
   double fontSize;
   String fontFamily;
+  Color color;
   bool isBold;
   bool isItalic;
 
   TextBox({
-    required this.text,
     required this.offset,
     required this.width,
     required this.height,
-    required this.color,
+    required this.text,
     required this.fontSize,
     required this.fontFamily,
+    required this.color,
     required this.isBold,
     required this.isItalic,
   });
 }
+
 
 
 
@@ -75,6 +76,9 @@ class _EditingPageState extends State<EditingPage> {
     });
   }
   bool _showFrame = true;
+
+
+  bool _isResizing = false;
 
   Map<String, bool> _isBoldMap = {
     'name': false,
@@ -277,34 +281,6 @@ class _EditingPageState extends State<EditingPage> {
     }
   }
 
-  bool _isOverDustbin(Offset position) {
-    final RenderBox box = _canvasKey.currentContext?.findRenderObject() as RenderBox;
-    final Offset localPosition = box.globalToLocal(position);
-
-    const double dustbinSize = 60;
-    final double dustbinY = box.size.height - dustbinSize - 20;
-    final Rect dustbinRect = Rect.fromCenter(
-      center: Offset(box.size.width / 2, dustbinY + dustbinSize / 2),
-      width: dustbinSize,
-      height: dustbinSize,
-    );
-
-    return dustbinRect.contains(localPosition);
-  }
-
-  void _handleDragEnd(Offset position) {
-    if (_isOverDustbin(position)) {
-      setState(() {
-        if (_draggingElement == 'logo') _showLogo = false;
-        if (_draggingElement == 'name') _showName = false;
-        if (_draggingElement == 'email') _showEmail = false;
-      });
-    }
-    setState(() {
-      _draggingElement = null;
-    });
-  }
-
   void _toggleBold(String identifier) {
     setState(() {
       if (identifier == 'textBox') {
@@ -324,8 +300,6 @@ class _EditingPageState extends State<EditingPage> {
       }
     });
   }
-
-
 
   Future<void> _saveImage() async {
     var status = await Permission.storage.request();
@@ -486,8 +460,6 @@ class _EditingPageState extends State<EditingPage> {
       textDirection: TextDirection.ltr,
     )..layout()).size;
 
-
-
     return Stack(
       children: [
         Positioned(
@@ -499,36 +471,18 @@ class _EditingPageState extends State<EditingPage> {
                 _selectedElement = identifier; // This will set the selected element
               });
             },
-            onScaleStart: (details) {
-              _initialFocalPoint = details.focalPoint;
-              _initialOffset = offset;
-              _initialFontSize = fontSize;
-              _draggingElement = identifier; // Start dragging the selected element
-            },
-            onScaleUpdate: (details) {
+            onPanStart: (details) {
               setState(() {
-                // Update position as user scales
-                onUpdateOffset(_initialOffset + (details.focalPoint - _initialFocalPoint));
-
-                // Dynamically adjust the font size during scaling
-                fontSize = _initialFontSize * details.scale; // Adjust font size based on scaling
-                fontSize = fontSize.clamp(10.0, 60.0); // Limit font size within a range
-              });
-            },
-            onLongPressStart: (details) {
-              setState(() {
-                _draggingElement = identifier;
+                _selectedElement = identifier;
                 _initialOffset = offset;
                 _initialFocalPoint = details.globalPosition;
               });
             },
-            onLongPressMoveUpdate: (details) {
+            onPanUpdate: (details) {
               setState(() {
-                // Update position as user moves on long press
                 onUpdateOffset(_initialOffset + (details.globalPosition - _initialFocalPoint));
               });
             },
-            onLongPressEnd: (details) => _handleDragEnd(details.globalPosition),
             child: Text(
               label,
               style: TextStyle(
@@ -536,7 +490,7 @@ class _EditingPageState extends State<EditingPage> {
                 fontSize: fontSize,
                 fontFamily: getFontFamily(identifier),
                 fontWeight: _isBoldMap[identifier]! ? FontWeight.bold : FontWeight.normal,
-                fontStyle: _isItalicMap[identifier]! ? FontStyle.italic : FontStyle.normal,// Use the dynamic font family based on identifier
+                fontStyle: _isItalicMap[identifier]! ? FontStyle.italic : FontStyle.normal,
               ),
             ),
           ),
@@ -546,6 +500,7 @@ class _EditingPageState extends State<EditingPage> {
       ],
     );
   }
+
   Widget _buildDraggableTextBox(int index) {
     final box = _textBoxes[index];
     final isSelected = _selectedElement == 'textBox' && _selectedTextBoxIndex == index;
@@ -553,106 +508,93 @@ class _EditingPageState extends State<EditingPage> {
     return Positioned(
       left: box.offset.dx,
       top: box.offset.dy,
-      child: GestureDetector(
-        onTap: () {
+      child: Listener(
+        onPointerDown: (_) {
           setState(() {
             _selectedElement = 'textBox';
             _selectedTextBoxIndex = index;
           });
         },
-        onScaleStart: (details) {
-          _initialFocalPoint = details.focalPoint;
-          _initialOffset = box.offset;
-          _initialFontSize = box.fontSize;
-        },
-        onScaleUpdate: (details) {
-          setState(() {
-            box.offset = _initialOffset + (details.focalPoint - _initialFocalPoint);
-            box.fontSize = (_initialFontSize * details.scale).clamp(10.0, 100.0);
-          });
-        },
-        onLongPressStart: (details) {
-          _initialOffset = box.offset;
-          _initialFocalPoint = details.globalPosition;
-        },
-        onLongPressMoveUpdate: (details) {
-          setState(() {
-            box.offset = _initialOffset + (details.globalPosition - _initialFocalPoint);
-          });
-        },
-        onDoubleTap: () => _editTextDialog(index),
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Container(
-              width: box.width,
-              height: box.height,
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                border: isSelected ? Border.all(color: Colors.blueAccent) : null,
-                color: Colors.transparent,
-              ),
-              child: Text(
-                box.text,
-                maxLines: null,
-                overflow: TextOverflow.visible,
-                style: TextStyle(
-                  fontSize: box.fontSize,
-                  fontFamily: box.fontFamily,
-                  color: box.color,
-                  fontWeight: box.isBold ? FontWeight.bold : FontWeight.normal,
-                  fontStyle: box.isItalic ? FontStyle.italic : FontStyle.normal,
+        child: GestureDetector(
+          onPanStart: (details) {
+            if (!_isResizing) {
+              setState(() {
+                _initialOffset = box.offset;
+                _initialFocalPoint = details.globalPosition;
+              });
+            }
+          },
+          onPanUpdate: (details) {
+            if (!_isResizing) {
+              setState(() {
+                box.offset = _initialOffset + (details.globalPosition - _initialFocalPoint);
+              });
+            }
+          },
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              // Text Box
+              Container(
+                width: box.width,
+                height: box.height,
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  border: isSelected ? Border.all(color: Colors.blueAccent) : null,
+                  color: Colors.white,
                 ),
-              ),
-            ),
-
-            if (isSelected)
-              Positioned(
-                right: -20,
-                top: -20,
-                child: GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _textBoxes.removeAt(index);
-                      _selectedTextBoxIndex = null;
-                      _selectedElement = null;
-                    });
-                  },
-                  child: const CircleAvatar(
-                    radius: 12,
-                    backgroundColor: Colors.red,
-                    child: Icon(Icons.close, size: 14, color: Colors.white),
+                child: Text(
+                  box.text,
+                  maxLines: null,
+                  overflow: TextOverflow.visible,
+                  style: TextStyle(
+                    fontSize: box.fontSize,
+                    fontFamily: box.fontFamily,
+                    color: box.color,
+                    fontWeight: box.isBold ? FontWeight.bold : FontWeight.normal,
+                    fontStyle: box.isItalic ? FontStyle.italic : FontStyle.normal,
                   ),
                 ),
               ),
 
-
-            // Delete button
-            if (isSelected)
-              Positioned(
-                right: -10,
-                bottom: -10,
-                child: GestureDetector(
-                  onPanUpdate: (details) {
-                    setState(() {
-                      box.width += details.delta.dx;
-                      box.height += details.delta.dy;
-                      box.width = box.width.clamp(50.0, 500.0);
-                      box.height = box.height.clamp(50.0, 500.0);
-                    });
-                  },
-                  child: CircleAvatar(
-                    radius: 14,
-                    backgroundColor: Colors.blue,
-                    child: Icon(Icons.zoom_out_map, size: 16, color: Colors.white),
+              // Resize Handle
+              if (isSelected)
+                Positioned(
+                  right: -10,
+                  bottom: -10,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onPanStart: (_) {
+                      setState(() => _isResizing = true);
+                    },
+                    onPanUpdate: (details) {
+                      setState(() {
+                        box.width += details.delta.dx;
+                        box.height += details.delta.dy;
+                        box.width = box.width.clamp(50.0, 500.0);
+                        box.height = box.height.clamp(50.0, 500.0);
+                      });
+                    },
+                    onPanEnd: (_) {
+                      setState(() => _isResizing = false);
+                    },
+                    child: const CircleAvatar(
+                      radius: 12,
+                      backgroundColor: Colors.blue,
+                      child: Icon(Icons.zoom_out_map, size: 16, color: Colors.white),
+                    ),
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
+
+
+
+
 
 
   void _editTextDialog(int index) {
@@ -883,7 +825,6 @@ class _EditingPageState extends State<EditingPage> {
                 _frameOffset = _initialOffset + (details.globalPosition - _initialFocalPoint);
               });
             },
-            onLongPressEnd: (details) => _handleDragEnd(details.globalPosition),
             child: Stack(
               children: [
                 Container(
@@ -989,7 +930,6 @@ class _EditingPageState extends State<EditingPage> {
                 _logoOffset = _initialOffset + (details.globalPosition - _initialFocalPoint);
               });
             },
-            onLongPressEnd: (details) => _handleDragEnd(details.globalPosition),
             child: Image.file(widget.companyInfo.logoPath, height: _logoSize),
           ),
         ),
