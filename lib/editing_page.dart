@@ -102,6 +102,9 @@ class _EditingPageState extends State<EditingPage> {
     'instagram': false,
   };
 
+  bool _showSocialIcons = true;
+  String _iconShape = 'Normal';
+  String _iconPosition = 'Right';
 
   bool _isNameBold = false;
   bool _isEmailBold = false;
@@ -186,7 +189,6 @@ class _EditingPageState extends State<EditingPage> {
   double _twitterFontSize = 16;
   double _instagramFontSize = 16;
 
-  String? _draggingElement;
   Offset _initialFocalPoint = Offset.zero;
   Offset _initialOffset = Offset.zero;
   double _initialFontSize = 1.0;
@@ -593,7 +595,71 @@ class _EditingPageState extends State<EditingPage> {
   }
 
 
+  void _showSocialSettings() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Container(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text("Social Icon Settings", style: TextStyle(fontWeight: FontWeight.bold)),
 
+                  Row(
+                    children: [
+                      const Text("Show Icons: "),
+                      Switch(
+                        value: _showSocialIcons,
+                        onChanged: (val) {
+                          setModalState(() => _showSocialIcons = val);
+                          setState(() => _showSocialIcons = val);
+                        },
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 10),
+                  const Text("Icon Shape"),
+                  Wrap(
+                    spacing: 10,
+                    children: ['Normal', 'Circle', 'Round Border'].map((shape) {
+                      return ChoiceChip(
+                        label: Text(shape),
+                        selected: _iconShape == shape,
+                        onSelected: (selected) {
+                          setModalState(() => _iconShape = shape);
+                          setState(() => _iconShape = shape);
+                        },
+                      );
+                    }).toList(),
+                  ),
+
+                  const SizedBox(height: 10),
+                  const Text("Icon Position"),
+                  Wrap(
+                    spacing: 10,
+                    children: ['Left', 'Right', 'Top Left', 'Top Right', 'Top'].map((pos) {
+                      return ChoiceChip(
+                        label: Text(pos),
+                        selected: _iconPosition == pos,
+                        onSelected: (selected) {
+                          setModalState(() => _iconPosition = pos);
+                          setState(() => _iconPosition = pos);
+                        },
+                      );
+                    }).toList(),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
 
 
 
@@ -806,7 +872,6 @@ class _EditingPageState extends State<EditingPage> {
             onScaleStart: (details) {
               _initialFocalPoint = details.focalPoint;
               _initialOffset = _frameOffset;
-              _draggingElement = 'frame';
             },
             onScaleUpdate: (details) {
               setState(() {
@@ -815,7 +880,6 @@ class _EditingPageState extends State<EditingPage> {
             },
             onLongPressStart: (details) {
               setState(() {
-                _draggingElement = 'frame';
                 _initialOffset = _frameOffset;
                 _initialFocalPoint = details.globalPosition;
               });
@@ -894,6 +958,54 @@ class _EditingPageState extends State<EditingPage> {
     );
   }
 
+  Widget _buildSocialIcons() {
+    List<Widget> icons = [
+      _socialIcon(Icons.facebook),
+      _socialIcon(Icons.linked_camera),
+      _socialIcon(Icons.travel_explore),
+      _socialIcon(Icons.camera_alt),
+    ];
+
+    Widget iconRow = Column(
+      mainAxisSize: MainAxisSize.min,
+      children: icons,
+    );
+
+    switch (_iconPosition) {
+      case 'Left':
+        return Positioned(left: 10, top: 50, child: iconRow);
+      case 'Right':
+        return Positioned(right: 10, top: 50, child: iconRow);
+      case 'Top Left':
+        return Positioned(left: 10, top: 10, child: Row(children: icons));
+      case 'Top Right':
+        return Positioned(right: 10, top: 10, child: Row(children: icons));
+      case 'Top':
+        return Positioned(top: 10, left: MediaQuery.of(context).size.width / 4, child: Row(children: icons));
+      default:
+        return Positioned(right: 10, top: 50, child: iconRow);
+    }
+  }
+
+  Widget _socialIcon(IconData iconData) {
+    return Container(
+      margin: const EdgeInsets.all(4),
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        shape: _iconShape == 'Circle'
+            ? BoxShape.circle
+            : BoxShape.rectangle,
+        // ✅ Only apply borderRadius if shape is rectangle
+        borderRadius: _iconShape == 'Round Border' && _iconShape != 'Circle'
+            ? BorderRadius.circular(10)
+            : null,
+        color: Colors.white,
+      ),
+      child: Icon(iconData, color: Colors.black, size: 20),
+    );
+  }
+
+
 
 
   Widget _buildDraggableLogo() {
@@ -911,7 +1023,6 @@ class _EditingPageState extends State<EditingPage> {
             onScaleStart: (details) {
               _initialFocalPoint = details.focalPoint;
               _initialOffset = _logoOffset;
-              _draggingElement = 'logo';
             },
             onScaleUpdate: (details) {
               setState(() {
@@ -920,7 +1031,6 @@ class _EditingPageState extends State<EditingPage> {
             },
             onLongPressStart: (details) {
               setState(() {
-                _draggingElement = 'logo';
                 _initialOffset = _logoOffset;
                 _initialFocalPoint = details.globalPosition;
               });
@@ -1078,6 +1188,8 @@ class _EditingPageState extends State<EditingPage> {
                           ),
                         for (int i = 0; i < _textBoxes.length; i++)
                           _buildDraggableTextBox(i),
+
+                        if (_showSocialIcons) _buildSocialIcons(),
                       ],
                     ),
                   ),
@@ -1122,6 +1234,10 @@ class _EditingPageState extends State<EditingPage> {
                   }),
 
                   _buildBottomButton('TextBox', _addTextBox),
+
+                  _buildBottomButton('Social', _showSocialSettings),
+
+
                 ],
               ),
             ),
