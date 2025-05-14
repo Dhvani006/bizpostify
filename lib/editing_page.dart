@@ -106,6 +106,9 @@ class _EditingPageState extends State<EditingPage> {
   String _iconShape = 'Normal';
   String _iconPosition = 'Right';
 
+  List<String> _selectedSocialIcons = ['Facebook', 'Instagram', 'LinkedIn', 'Twitter', 'YouTube'];
+  List<String> _selectedIcons = [];
+
   bool _isNameBold = false;
   bool _isEmailBold = false;
   bool _isMobileBold = false;
@@ -601,58 +604,88 @@ class _EditingPageState extends State<EditingPage> {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setModalState) {
-            return Container(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text("Social Icon Settings", style: TextStyle(fontWeight: FontWeight.bold)),
+            return SingleChildScrollView( // Wrapping with scroll view
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text("Social Icon Settings", style: TextStyle(fontWeight: FontWeight.bold)),
 
-                  Row(
-                    children: [
-                      const Text("Show Icons: "),
-                      Switch(
-                        value: _showSocialIcons,
-                        onChanged: (val) {
-                          setModalState(() => _showSocialIcons = val);
-                          setState(() => _showSocialIcons = val);
-                        },
-                      ),
-                    ],
-                  ),
+                    Row(
+                      children: [
+                        const Text("Show Icons: "),
+                        Switch(
+                          value: _showSocialIcons,
+                          onChanged: (val) {
+                            setModalState(() => _showSocialIcons = val);
+                            setState(() => _showSocialIcons = val);
+                          },
+                        ),
+                      ],
+                    ),
 
-                  const SizedBox(height: 10),
-                  const Text("Icon Shape"),
-                  Wrap(
-                    spacing: 10,
-                    children: ['Normal', 'Circle', 'Round Border'].map((shape) {
-                      return ChoiceChip(
-                        label: Text(shape),
-                        selected: _iconShape == shape,
-                        onSelected: (selected) {
-                          setModalState(() => _iconShape = shape);
-                          setState(() => _iconShape = shape);
-                        },
-                      );
-                    }).toList(),
-                  ),
+                    const SizedBox(height: 10),
+                    const Text("Icon Shape"),
+                    Wrap(
+                      spacing: 10,
+                      children: ['Normal', 'Circle', 'Round Border'].map((shape) {
+                        return ChoiceChip(
+                          label: Text(shape),
+                          selected: _iconShape == shape,
+                          onSelected: (selected) {
+                            setModalState(() => _iconShape = shape);
+                            setState(() => _iconShape = shape);
+                          },
+                        );
+                      }).toList(),
+                    ),
 
-                  const SizedBox(height: 10),
-                  const Text("Icon Position"),
-                  Wrap(
-                    spacing: 10,
-                    children: ['Left', 'Right', 'Top Left', 'Top Right', 'Top'].map((pos) {
-                      return ChoiceChip(
-                        label: Text(pos),
-                        selected: _iconPosition == pos,
-                        onSelected: (selected) {
-                          setModalState(() => _iconPosition = pos);
-                          setState(() => _iconPosition = pos);
-                        },
-                      );
-                    }).toList(),
-                  ),
-                ],
+                    const SizedBox(height: 10),
+                    const Text("Icon Position"),
+                    Wrap(
+                      spacing: 10,
+                      children: ['Left', 'Right', 'Top Left', 'Top Right', 'Top'].map((pos) {
+                        return ChoiceChip(
+                          label: Text(pos),
+                          selected: _iconPosition == pos,
+                          onSelected: (selected) {
+                            setModalState(() => _iconPosition = pos);
+                            setState(() => _iconPosition = pos);
+                          },
+                        );
+                      }).toList(),
+                    ),
+
+                    const SizedBox(height: 10),
+                    const Text("Select Icons to Show"),
+                    Wrap(
+                      spacing: 10,
+                      children: _selectedSocialIcons.map((icon) {
+                        return ChoiceChip(
+                          label: Text(icon),
+                          selected: _selectedIcons.contains(icon),
+                          onSelected: (selected) {
+                            setModalState(() {
+                              if (selected) {
+                                _selectedIcons.add(icon);
+                              } else {
+                                _selectedIcons.remove(icon);
+                              }
+                            });
+                            setState(() {
+                              if (selected) {
+                                _selectedIcons.add(icon);
+                              } else {
+                                _selectedIcons.remove(icon);
+                              }
+                            });
+                          },
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
               ),
             );
           },
@@ -958,15 +991,23 @@ class _EditingPageState extends State<EditingPage> {
     );
   }
 
-  Widget _buildSocialIcons() {
-    List<Widget> icons = [
-      _socialIcon(Icons.facebook),
-      _socialIcon(Icons.linked_camera),
-      _socialIcon(Icons.travel_explore),
-      _socialIcon(Icons.camera_alt),
-    ];
 
-    Widget iconRow = Column(
+  Widget _buildSocialIcons() {
+    List<Widget> icons = [];
+
+    // Add the selected icons to the list
+    if (_selectedIcons.contains('Facebook')) icons.add(_socialIcon(Icons.facebook));
+    if (_selectedIcons.contains('Instagram')) icons.add(_socialIcon(Icons.camera_alt));
+    if (_selectedIcons.contains('LinkedIn')) icons.add(_socialIcon(Icons.linked_camera));
+    if (_selectedIcons.contains('Twitter')) icons.add(_socialIcon(Icons.travel_explore));
+    if (_selectedIcons.contains('YouTube')) icons.add(_socialIcon(Icons.video_library));
+
+    if (icons.isEmpty) {
+      return Container(); // If no icons are selected, return an empty container
+    }
+
+    // Wrap the icons in a Row or Column based on icon position
+    Widget iconRow = Row(
       mainAxisSize: MainAxisSize.min,
       children: icons,
     );
@@ -977,15 +1018,16 @@ class _EditingPageState extends State<EditingPage> {
       case 'Right':
         return Positioned(right: 10, top: 50, child: iconRow);
       case 'Top Left':
-        return Positioned(left: 10, top: 10, child: Row(children: icons));
+        return Positioned(left: 10, top: 10, child: iconRow);
       case 'Top Right':
-        return Positioned(right: 10, top: 10, child: Row(children: icons));
+        return Positioned(right: 10, top: 10, child: iconRow);
       case 'Top':
-        return Positioned(top: 10, left: MediaQuery.of(context).size.width / 4, child: Row(children: icons));
+        return Positioned(top: 10, left: MediaQuery.of(context).size.width / 4, child: iconRow);
       default:
         return Positioned(right: 10, top: 50, child: iconRow);
     }
   }
+
 
   Widget _socialIcon(IconData iconData) {
     return Container(
