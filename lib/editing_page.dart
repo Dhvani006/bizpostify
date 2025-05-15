@@ -102,6 +102,47 @@ class _EditingPageState extends State<EditingPage> {
     'instagram': false,
   };
 
+  List<String> _backgroundImages = [
+    'assets/images/bg1.jpg',
+    'assets/images/bg2.jpg',
+    'assets/images/bg3.jpg',
+  ];
+
+  String? _selectedBackgroundImage;
+
+  void _selectBackgroundImage() {
+    showModalBottomSheet(
+      context: context,
+      builder: (_) {
+        return GridView.builder(
+          padding: const EdgeInsets.all(10),
+          itemCount: _backgroundImages.length,
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 3,
+            mainAxisSpacing: 10,
+            crossAxisSpacing: 10,
+          ),
+          itemBuilder: (ctx, index) {
+            return GestureDetector(
+              onTap: () {
+                setState(() {
+                  _selectedBackgroundImage = _backgroundImages[index];
+                });
+                Navigator.of(context).pop();
+              },
+              child: Image.asset(
+                _backgroundImages[index],
+                fit: BoxFit.cover,
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+
+
   bool _showSocialIcons = true;
   String _iconShape = 'Normal';
   String _iconPosition = 'Right';
@@ -1126,6 +1167,15 @@ class _EditingPageState extends State<EditingPage> {
                     ),
                     child: Stack(
                       children: [
+                        // Background image (optional)
+                        if (_selectedBackgroundImage != null)
+                          Positioned.fill(
+                            child: Image.asset(
+                              _selectedBackgroundImage!,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+
                         // Display selected photo if one is picked
                         if (_pickedPhoto != null)
                           Positioned.fill(child: Image.file(_pickedPhoto!, fit: BoxFit.cover)),
@@ -1278,6 +1328,9 @@ class _EditingPageState extends State<EditingPage> {
                   _buildBottomButton('TextBox', _addTextBox),
 
                   _buildBottomButton('Social', _showSocialSettings),
+
+                  _buildBottomButton('Background', _selectBackgroundImage),
+
 
 
                 ],
