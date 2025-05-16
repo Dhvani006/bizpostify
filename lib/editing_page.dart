@@ -10,6 +10,8 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 
 import 'model/CompanyInfo.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+
 class EditingPage extends StatefulWidget {
 
   final Map<String, bool> selectedFields;
@@ -317,6 +319,34 @@ class _EditingPageState extends State<EditingPage> {
     }
   }
 
+  void _editTextDialog(int index) {
+    final controller = TextEditingController(text: _textBoxes[index].text);
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Edit Text'),
+          content: TextField(
+            controller: controller,
+            decoration: InputDecoration(hintText: 'Enter new text'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  _textBoxes[index].text = controller.text;
+                });
+                Navigator.pop(context);
+              },
+              child: Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
   Future<void> _pickPhoto() async {
     final picker = ImagePicker();
     final XFile? image = await picker.pickImage(source: ImageSource.gallery);
@@ -581,27 +611,32 @@ class _EditingPageState extends State<EditingPage> {
             clipBehavior: Clip.none,
             children: [
               // Text Box
-              Container(
-                width: box.width,
-                height: box.height,
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  border: isSelected ? Border.all(color: Colors.blueAccent) : null,
-                  color: Colors.white,
-                ),
-                child: Text(
-                  box.text,
-                  maxLines: null,
-                  overflow: TextOverflow.visible,
-                  style: TextStyle(
-                    fontSize: box.fontSize,
-                    fontFamily: box.fontFamily,
-                    color: box.color,
-                    fontWeight: box.isBold ? FontWeight.bold : FontWeight.normal,
-                    fontStyle: box.isItalic ? FontStyle.italic : FontStyle.normal,
+              // Text Box with tap to edit
+              GestureDetector(
+                onTap: () => _editTextDialog(index),
+                child: Container(
+                  width: box.width,
+                  height: box.height,
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    border: isSelected ? Border.all(color: Colors.blueAccent) : null,
+                    color: Colors.transparent,
+                  ),
+                  child: Text(
+                    box.text,
+                    maxLines: null,
+                    overflow: TextOverflow.visible,
+                    style: TextStyle(
+                      fontSize: box.fontSize,
+                      fontFamily: box.fontFamily,
+                      color: box.color,
+                      fontWeight: box.isBold ? FontWeight.bold : FontWeight.normal,
+                      fontStyle: box.isItalic ? FontStyle.italic : FontStyle.normal,
+                    ),
                   ),
                 ),
               ),
+
 
               // Resize Handle
               if (isSelected)
@@ -737,32 +772,7 @@ class _EditingPageState extends State<EditingPage> {
 
 
 
-  void _editTextDialog(int index) {
-    final controller = TextEditingController(text: _textBoxes[index].text);
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('Edit Text'),
-          content: TextField(
-            controller: controller,
-            decoration: InputDecoration(hintText: 'Enter new text'),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  _textBoxes[index].text = controller.text;
-                });
-                Navigator.pop(context);
-              },
-              child: Text('Save'),
-            ),
-          ],
-        );
-      },
-    );
-  }
+
 
 
   void _selectTextColor(String identifier) async {
@@ -1037,11 +1047,11 @@ class _EditingPageState extends State<EditingPage> {
     List<Widget> icons = [];
 
     // Add the selected icons to the list
-    if (_selectedIcons.contains('Facebook')) icons.add(_socialIcon(Icons.facebook));
-    if (_selectedIcons.contains('Instagram')) icons.add(_socialIcon(Icons.camera_alt));
-    if (_selectedIcons.contains('LinkedIn')) icons.add(_socialIcon(Icons.linked_camera));
-    if (_selectedIcons.contains('Twitter')) icons.add(_socialIcon(Icons.travel_explore));
-    if (_selectedIcons.contains('YouTube')) icons.add(_socialIcon(Icons.video_library));
+    if (_selectedIcons.contains('Facebook')) icons.add(_socialIcon(FontAwesomeIcons.facebook));
+    if (_selectedIcons.contains('Instagram')) icons.add(_socialIcon(FontAwesomeIcons.instagram));
+    if (_selectedIcons.contains('LinkedIn')) icons.add(_socialIcon(FontAwesomeIcons.linkedin));
+    if (_selectedIcons.contains('Twitter')) icons.add(_socialIcon(FontAwesomeIcons.twitter));
+    if (_selectedIcons.contains('YouTube')) icons.add(_socialIcon(FontAwesomeIcons.youtube));
 
     if (icons.isEmpty) {
       return Container(); // If no icons are selected, return an empty container
