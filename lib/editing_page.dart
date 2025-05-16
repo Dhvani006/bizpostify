@@ -11,7 +11,7 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 
 import 'model/CompanyInfo.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-
+import 'package:uuid/uuid.dart';
 class EditingPage extends StatefulWidget {
 
   final Map<String, bool> selectedFields;
@@ -29,6 +29,8 @@ class EditingPage extends StatefulWidget {
 List<TextBox> _textBoxes = [];
 
 class TextBox {
+  final String identifier;  // add this
+
   Offset offset;
   double width;
   double height;
@@ -40,6 +42,7 @@ class TextBox {
   bool isItalic;
 
   TextBox({
+    required this.identifier, // add this to constructor
     required this.offset,
     required this.width,
     required this.height,
@@ -52,17 +55,16 @@ class TextBox {
   });
 }
 
-
-
-
 int? _selectedTextBoxIndex;
 
 class _EditingPageState extends State<EditingPage> {
 
 
+  final uuid = Uuid();
   void _addTextBox() {
     setState(() {
       _textBoxes.add(TextBox(
+        identifier: uuid.v4(),  // generate unique id here
         text: 'New Text',
         offset: Offset(100, 100),
         fontSize: 20,
@@ -143,6 +145,7 @@ class _EditingPageState extends State<EditingPage> {
     );
   }
 
+  List<StickerBox> _stickers = [];
 
 
   bool _showSocialIcons = true;
@@ -302,6 +305,51 @@ class _EditingPageState extends State<EditingPage> {
     _fetchFrames();
   }
 
+
+
+
+  // Called by the button
+  void _showStickerPicker() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return GridView.count(
+          crossAxisCount: 3,
+          padding: const EdgeInsets.all(16),
+          children: [
+            _stickerTile('assets/sticker/s1.png'),
+            _stickerTile('assets/sticker/s2.png'),
+          ],
+        );
+      },
+    );
+  }
+
+// Builds each sticker option
+  Widget _stickerTile(String path) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.pop(context);
+        _addSticker(path);
+      },
+      child: Image.asset(path),
+    );
+  }
+
+// Adds a sticker with path
+  void _addSticker(String path) {
+    final sticker = StickerBox(
+      position: const Offset(100, 100),
+      assetPath: path,
+    );
+
+    setState(() {
+      _stickers.add(sticker);
+    });
+  }
+
+
+
   Future<void> _fetchFrames() async {
     try {
       final uri = "http://172.27.229.66/practice_api/viewFrame.php";
@@ -376,6 +424,12 @@ class _EditingPageState extends State<EditingPage> {
       }
     });
   }
+  void _removeTextBox(String identifier) {
+    setState(() {
+      _textBoxes.removeWhere((textBox) => textBox.identifier == identifier);
+    });
+  }
+
 
   Future<void> _saveImage() async {
     var status = await Permission.storage.request();
@@ -544,7 +598,7 @@ class _EditingPageState extends State<EditingPage> {
           child: GestureDetector(
             onTap: () {
               setState(() {
-                _selectedElement = identifier; // This will set the selected element
+                _selectedElement = identifier; // Select this element
               });
             },
             onPanStart: (details) {
@@ -559,20 +613,42 @@ class _EditingPageState extends State<EditingPage> {
                 onUpdateOffset(_initialOffset + (details.globalPosition - _initialFocalPoint));
               });
             },
-            child: Text(
-              label,
-              style: TextStyle(
-                color: getTextColor(identifier), // Use the dynamic color based on identifier
-                fontSize: fontSize,
-                fontFamily: getFontFamily(identifier),
-                fontWeight: _isBoldMap[identifier]! ? FontWeight.bold : FontWeight.normal,
-                fontStyle: _isItalicMap[identifier]! ? FontStyle.italic : FontStyle.normal,
-              ),
+            child: Stack(
+              alignment: Alignment.topRight,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: getTextColor(identifier),
+                    fontSize: fontSize,
+                    fontFamily: getFontFamily(identifier),
+                    fontWeight: _isBoldMap[identifier]! ? FontWeight.bold : FontWeight.normal,
+                    fontStyle: _isItalicMap[identifier]! ? FontStyle.italic : FontStyle.normal,
+                  ),
+                ),
+                // Show close button only if this is selected element
+                if (_selectedElement == identifier)
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        // Remove this text box (or element) from your list
+                        _removeTextBox(identifier);
+                        // Clear selection if needed
+                        if (_selectedElement == identifier) _selectedElement = null;
+                      });
+                    },
+                    child: CircleAvatar(
+                      radius: 10,
+                      backgroundColor: Colors.red,
+                      child: Icon(Icons.close, size: 12, color: Colors.white),
+                    ),
+                  ),
+              ],
             ),
           ),
         ),
         if (_selectedElement == identifier)
-          _buildSelectionBox(offset, textSize, identifier), // Show selection box if this element is selected
+          _buildSelectionBox(offset, textSize, identifier), // Existing selection box
       ],
     );
   }
@@ -637,7 +713,25 @@ class _EditingPageState extends State<EditingPage> {
                 ),
               ),
 
-
+              if (isSelected)
+                Positioned(
+                  top: -10,
+                  right: -10,
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _textBoxes.removeAt(index);
+                        _selectedTextBoxIndex = null;
+                        _selectedElement = null;
+                      });
+                    },
+                    child: const CircleAvatar(
+                      radius: 12,
+                      backgroundColor: Colors.red,
+                      child: Icon(Icons.close, size: 16, color: Colors.white),
+                    ),
+                  ),
+                ),
               // Resize Handle
               if (isSelected)
                 Positioned(
@@ -1288,10 +1382,51 @@ class _EditingPageState extends State<EditingPage> {
                             onUpdateFontSize: (val) => _instagramFontSize = val,
                             identifier: 'instagram',
                           ),
+
+                        ..._stickers.map((sticker) {
+                          return Positioned(
+                            left: sticker.position.dx,
+                            top: sticker.position.dy,
+                            child: GestureDetector(
+                              onPanUpdate: (details) {
+                                setState(() {
+                                  sticker.position += details.delta;
+                                });
+                              },
+                              child: Stack(
+                                alignment: Alignment.topRight,
+                                children: [
+                                  Image.asset(
+                                    sticker.assetPath,
+                                    width: 80,
+                                    height: 80,
+                                    fit: BoxFit.contain,
+                                  ),
+                                  GestureDetector(
+                                    onTap: () {
+                                      setState(() {
+                                        _stickers.remove(sticker);
+                                      });
+                                    },
+                                    child: CircleAvatar(
+                                      radius: 10,
+                                      backgroundColor: Colors.red,
+                                      child: Icon(Icons.close, size: 12, color: Colors.white),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }).toList(),
+
+
                         for (int i = 0; i < _textBoxes.length; i++)
                           _buildDraggableTextBox(i),
 
                         if (_showSocialIcons) _buildSocialIcons(),
+
+
                       ],
                     ),
                   ),
@@ -1341,7 +1476,7 @@ class _EditingPageState extends State<EditingPage> {
 
                   _buildBottomButton('Background', _selectBackgroundImage),
 
-
+                  _buildBottomButton('Sticker', _showStickerPicker),
 
                 ],
               ),
@@ -1406,4 +1541,10 @@ class _EditingPageState extends State<EditingPage> {
     );
   }
 
+}
+class StickerBox {
+  Offset position;
+  final String assetPath;
+
+  StickerBox({required this.position, required this.assetPath});
 }
