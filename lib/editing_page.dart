@@ -106,46 +106,46 @@ class _EditingPageState extends State<EditingPage> {
     'instagram': false,
   };
 
-  List<String> _backgroundImages = [
-    'assets/images/bg1.jpg',
-    'assets/images/bg2.jpg',
-    'assets/images/bg3.jpg',
-  ];
+  // List<String> _backgroundImages = [
+  //   'assets/images/bg1.jpg',
+  //   'assets/images/bg2.jpg',
+  //   'assets/images/bg3.jpg',
+  // ];
 
-  String? _selectedBackgroundImage;
+ // String? _selectedBackgroundImage;
 
-  void _selectBackgroundImage() {
-    showModalBottomSheet(
-      context: context,
-      builder: (_) {
-        return GridView.builder(
-          padding: const EdgeInsets.all(10),
-          itemCount: _backgroundImages.length,
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 3,
-            mainAxisSpacing: 10,
-            crossAxisSpacing: 10,
-          ),
-          itemBuilder: (ctx, index) {
-            return GestureDetector(
-              onTap: () {
-                setState(() {
-                  _selectedBackgroundImage = _backgroundImages[index];
-                });
-                Navigator.of(context).pop();
-              },
-              child: Image.asset(
-                _backgroundImages[index],
-                fit: BoxFit.cover,
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
+  // void _selectBackgroundImage() {
+  //   showModalBottomSheet(
+  //     context: context,
+  //     builder: (_) {
+  //       return GridView.builder(
+  //         padding: const EdgeInsets.all(10),
+  //         itemCount: _backgroundImages.length,
+  //         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+  //           crossAxisCount: 3,
+  //           mainAxisSpacing: 10,
+  //           crossAxisSpacing: 10,
+  //         ),
+  //         itemBuilder: (ctx, index) {
+  //           return GestureDetector(
+  //             onTap: () {
+  //               setState(() {
+  //                 _selectedBackgroundImage = _backgroundImages[index];
+  //               });
+  //               Navigator.of(context).pop();
+  //             },
+  //             child: Image.asset(
+  //               _backgroundImages[index],
+  //               fit: BoxFit.cover,
+  //             ),
+  //           );
+  //         },
+  //       );
+  //     },
+  //   );
+  // }
 
-  List<StickerBox> _stickers = [];
+  //List<StickerBox> _stickers = [];
 
 
   bool _showSocialIcons = true;
@@ -309,44 +309,44 @@ class _EditingPageState extends State<EditingPage> {
 
 
   // Called by the button
-  void _showStickerPicker() {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) {
-        return GridView.count(
-          crossAxisCount: 3,
-          padding: const EdgeInsets.all(16),
-          children: [
-            _stickerTile('assets/sticker/s1.png'),
-            _stickerTile('assets/sticker/s2.png'),
-          ],
-        );
-      },
-    );
-  }
+  // void _showStickerPicker() {
+  //   showModalBottomSheet(
+  //     context: context,
+  //     builder: (context) {
+  //       return GridView.count(
+  //         crossAxisCount: 3,
+  //         padding: const EdgeInsets.all(16),
+  //         children: [
+  //           _stickerTile('assets/sticker/s1.png'),
+  //           _stickerTile('assets/sticker/s2.png'),
+  //         ],
+  //       );
+  //     },
+  //   );
+  // }
 
 // Builds each sticker option
-  Widget _stickerTile(String path) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.pop(context);
-        _addSticker(path);
-      },
-      child: Image.asset(path),
-    );
-  }
+//   Widget _stickerTile(String path) {
+//     return GestureDetector(
+//       onTap: () {
+//         Navigator.pop(context);
+//         _addSticker(path);
+//       },
+//       child: Image.asset(path),
+//     );
+//   }
 
 // Adds a sticker with path
-  void _addSticker(String path) {
-    final sticker = StickerBox(
-      position: const Offset(100, 100),
-      assetPath: path,
-    );
-
-    setState(() {
-      _stickers.add(sticker);
-    });
-  }
+//   void _addSticker(String path) {
+//     final sticker = StickerBox(
+//       position: const Offset(100, 100),
+//       assetPath: path,
+//     );
+//
+//     setState(() {
+//       _stickers.add(sticker);
+//     });
+//   }
 
 
 
@@ -864,11 +864,6 @@ class _EditingPageState extends State<EditingPage> {
     );
   }
 
-
-
-
-
-
   void _selectTextColor(String identifier) async {
     final pickedColor = await showDialog<Color>(
       context: context,
@@ -1272,13 +1267,13 @@ class _EditingPageState extends State<EditingPage> {
                     child: Stack(
                       children: [
                         // Background image (optional)
-                        if (_selectedBackgroundImage != null)
-                          Positioned.fill(
-                            child: Image.asset(
-                              _selectedBackgroundImage!,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
+                        // if (_selectedBackgroundImage != null)
+                        //   Positioned.fill(
+                        //     child: Image.asset(
+                        //       _selectedBackgroundImage!,
+                        //       fit: BoxFit.cover,
+                        //     ),
+                        //   ),
 
                         // Display selected photo if one is picked
                         if (_pickedPhoto != null)
@@ -1383,42 +1378,42 @@ class _EditingPageState extends State<EditingPage> {
                             identifier: 'instagram',
                           ),
 
-                        ..._stickers.map((sticker) {
-                          return Positioned(
-                            left: sticker.position.dx,
-                            top: sticker.position.dy,
-                            child: GestureDetector(
-                              onPanUpdate: (details) {
-                                setState(() {
-                                  sticker.position += details.delta;
-                                });
-                              },
-                              child: Stack(
-                                alignment: Alignment.topRight,
-                                children: [
-                                  Image.asset(
-                                    sticker.assetPath,
-                                    width: 80,
-                                    height: 80,
-                                    fit: BoxFit.contain,
-                                  ),
-                                  GestureDetector(
-                                    onTap: () {
-                                      setState(() {
-                                        _stickers.remove(sticker);
-                                      });
-                                    },
-                                    child: CircleAvatar(
-                                      radius: 10,
-                                      backgroundColor: Colors.red,
-                                      child: Icon(Icons.close, size: 12, color: Colors.white),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        }).toList(),
+                        // ..._stickers.map((sticker) {
+                        //   return Positioned(
+                        //     left: sticker.position.dx,
+                        //     top: sticker.position.dy,
+                        //     child: GestureDetector(
+                        //       onPanUpdate: (details) {
+                        //         setState(() {
+                        //           sticker.position += details.delta;
+                        //         });
+                        //       },
+                        //       child: Stack(
+                        //         alignment: Alignment.topRight,
+                        //         children: [
+                        //           Image.asset(
+                        //             sticker.assetPath,
+                        //             width: 80,
+                        //             height: 80,
+                        //             fit: BoxFit.contain,
+                        //           ),
+                        //           GestureDetector(
+                        //             onTap: () {
+                        //               setState(() {
+                        //                 _stickers.remove(sticker);
+                        //               });
+                        //             },
+                        //             child: CircleAvatar(
+                        //               radius: 10,
+                        //               backgroundColor: Colors.red,
+                        //               child: Icon(Icons.close, size: 12, color: Colors.white),
+                        //             ),
+                        //           ),
+                        //         ],
+                        //       ),
+                        //     ),
+                        //   );
+                        // }).toList(),
 
 
                         for (int i = 0; i < _textBoxes.length; i++)
@@ -1474,9 +1469,9 @@ class _EditingPageState extends State<EditingPage> {
 
                   _buildBottomButton('Social', _showSocialSettings),
 
-                  _buildBottomButton('Background', _selectBackgroundImage),
-
-                  _buildBottomButton('Sticker', _showStickerPicker),
+                  // _buildBottomButton('Background', _selectBackgroundImage),
+                  //
+                  // _buildBottomButton('Sticker', _showStickerPicker),
 
                 ],
               ),
