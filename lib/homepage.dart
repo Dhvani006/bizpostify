@@ -53,7 +53,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> fetchTemplates() async {
-    const String apiUrl = 'http://172.27.61.186/practice_api/get_templates.php';
+    const String apiUrl = 'http://172.24.212.186/practice_api/get_templates.php';
 
     try {
       final response = await http.get(Uri.parse(apiUrl));
@@ -203,7 +203,7 @@ class _HomePageState extends State<HomePage> {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10),
                     image: DecorationImage(
-                      image: NetworkImage("http://172.27.61.186/practice_api/$imgPath"),
+                      image: NetworkImage("http://172.24.212.186/practice_api/$imgPath"),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -271,7 +271,7 @@ class _HomePageState extends State<HomePage> {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(10),
                       image: DecorationImage(
-                        image: NetworkImage("http://172.27.61.186/practice_api/$imgPath"),
+                        image: NetworkImage("http://172.24.212.186/practice_api/$imgPath"),
                         fit: BoxFit.cover,
                       ),
                     ),
