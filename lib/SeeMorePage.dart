@@ -1,6 +1,8 @@
 // SeeMorePage.dart
 import 'package:flutter/material.dart';
 
+import 'api_config.dart';
+
 class SeeMorePage extends StatelessWidget {
   final String categoryTitle;
   final List<dynamic> templates;
@@ -34,7 +36,7 @@ class SeeMorePage extends StatelessWidget {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(10),
                 image: DecorationImage(
-                  image: NetworkImage("http://172.27.61.186/practice_api/$imgPath"),
+                  image: NetworkImage("$baseUrl/practice_api/$imgPath"),
                   fit: BoxFit.cover,
                 ),
               ),

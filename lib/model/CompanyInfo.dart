@@ -9,7 +9,7 @@ class CompanyInfo {
   final String linkedin;
   final String twitter;
   final String instagram;
-  final File logoPath;
+  final String logoPath;
 
   CompanyInfo({
     required this.name,

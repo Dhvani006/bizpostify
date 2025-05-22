@@ -1,36 +1,17 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:festival_card/SeeMorePage.dart';
+import 'package:festival_card/api_config.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'editing_page.dart';
 import 'model/CompanyInfo.dart';
 import 'module/CompanyInfoSelectionDialog.dart';
 
 class HomePage extends StatefulWidget {
-  final String companyName;
-  final String email;
-  final String facebook;
-  final String linkedin;
-  final String twitter;
-  final String instagram;
-  final String mobile;
-  final String address;
-  final File logo;
 
-  const HomePage({
-    Key? key,
-    required this.companyName,
-    required this.email,
-    required this.facebook,
-    required this.linkedin,
-    required this.twitter,
-    required this.instagram,
-    required this.mobile,
-    required this.address,
-    required this.logo,
-  }) : super(key: key);
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -45,15 +26,44 @@ class _HomePageState extends State<HomePage> {
   String? selectedCategory;
   bool isLoading = true;
   //try
+  CompanyInfo companyInfo = CompanyInfo(
+    name: '',
+    email: '',
+    mobile: '',
+    address: '',
+    facebook: '',
+    linkedin: '',
+    twitter: '',
+    instagram: '',
+    logoPath: '',
+  );
 
   @override
   void initState() {
     super.initState();
+    loadCompanyInfo();
     fetchTemplates();
+  }
+  Future<void> loadCompanyInfo() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    setState(() {
+      companyInfo = CompanyInfo(
+        name: prefs.getString('company_name') ?? '',
+        email: prefs.getString('email') ?? '',
+        facebook: prefs.getString('facebook') ?? '',
+        linkedin: prefs.getString('linkedin') ?? '',
+        twitter: prefs.getString('twitter') ?? '',
+        instagram: prefs.getString('instagram') ?? '',
+        mobile: prefs.getString('mobile') ?? '',
+        address: prefs.getString('address') ?? '',
+        logoPath: prefs.getString('logo_path') ?? '',
+      );
+    });
   }
 
   Future<void> fetchTemplates() async {
-    const String apiUrl = 'http://172.24.212.186/practice_api/get_templates.php';
+    const String apiUrl = '$baseUrl/practice_api/get_templates.php';
 
     try {
       final response = await http.get(Uri.parse(apiUrl));
@@ -90,15 +100,15 @@ class _HomePageState extends State<HomePage> {
                 context: context,
                 builder: (context) => CompanyInfoSelectionDialog(
                   companyInfo: CompanyInfo(
-                    name: widget.companyName,
-                    email: widget.email,
-                    mobile: widget.mobile,
-                    address: widget.address,
-                    facebook: widget.facebook,
-                    linkedin: widget.linkedin,
-                    twitter: widget.twitter,
-                    instagram: widget.instagram,
-                    logoPath: widget.logo,
+                    name: companyInfo.name,
+                    email: companyInfo.email,
+                    mobile: companyInfo.mobile,
+                    address: companyInfo.address,
+                    facebook: companyInfo.facebook,
+                    linkedin: companyInfo.linkedin,
+                    twitter: companyInfo.twitter,
+                    instagram: companyInfo.instagram,
+                    logoPath: companyInfo.logoPath,
                   ),
                 ),
               );
@@ -203,7 +213,7 @@ class _HomePageState extends State<HomePage> {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10),
                     image: DecorationImage(
-                      image: NetworkImage("http://172.24.212.186/practice_api/$imgPath"),
+                      image: NetworkImage("$baseUrl/practice_api/$imgPath"),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -271,7 +281,7 @@ class _HomePageState extends State<HomePage> {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(10),
                       image: DecorationImage(
-                        image: NetworkImage("http://172.24.212.186/practice_api/$imgPath"),
+                        image: NetworkImage("$baseUrl/practice_api/$imgPath"),
                         fit: BoxFit.cover,
                       ),
                     ),

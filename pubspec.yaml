@@ -39,6 +39,7 @@ dependencies:
   http: ^0.13.6
   font_awesome_flutter: ^10.7.0
   uuid: ^3.0.0
+  shared_preferences: ^2.5.3
 
 
   # The following adds the Cupertino Icons font to your application.
@@ -71,10 +72,8 @@ flutter:
   assets:
     - assets/images/flower.png
     - assets/images/splash_screen.png
-    - assets/images/bg1.jpg
-    - assets/images/bg2.jpg
-    - assets/images/bg3.jpg
-    - assets/sticker/
+    - assets/images/splash_logo.png
+
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
