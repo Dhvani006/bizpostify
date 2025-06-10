@@ -1,0 +1,29 @@
+[33mc86cfca[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m)[m HEAD@{0}: rebase (finish): returning to refs/heads/master
+[33mc86cfca[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m)[m HEAD@{1}: rebase (start): checkout origin/master
+[33m6bc9315[m HEAD@{2}: reset: moving to 6bc9315
+[33m6bc9315[m HEAD@{3}: reset: moving to 6bc9315
+[33m6bc9315[m HEAD@{4}: reset: moving to 6bc9315
+[33m586d848[m HEAD@{5}: rebase (abort): returning to refs/heads/master
+[33mc86cfca[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m)[m HEAD@{6}: rebase (start): checkout origin/master
+[33m586d848[m HEAD@{7}: rebase (abort): returning to refs/heads/master
+[33m0bbf3c0[m HEAD@{8}: rebase (start): checkout origin/master
+[33m586d848[m HEAD@{9}: commit: homepage_working_again
+[33mffdaa84[m HEAD@{10}: rebase (finish): returning to refs/heads/master
+[33mffdaa84[m HEAD@{11}: rebase (pick): homepage_working_again
+[33mbb2ee60[m HEAD@{12}: rebase (start): checkout origin/master
+[33mb457b38[m HEAD@{13}: commit: homepage_working_again
+[33m33f0616[m HEAD@{14}: rebase (finish): returning to refs/heads/master
+[33m33f0616[m HEAD@{15}: rebase (pick): homepage_working
+[33m3ca02a3[m HEAD@{16}: rebase (pick): homepage_working
+[33m96f0eb5[m HEAD@{17}: rebase (pick): homepage_working
+[33m5d1e662[m HEAD@{18}: rebase (pick): homepage_working
+[33m4abcc06[m HEAD@{19}: rebase (start): checkout origin/master
+[33m8099bbe[m HEAD@{20}: commit: homepage_working
+[33m428d82c[m HEAD@{21}: commit: homepage_working
+[33m0c45b9b[m HEAD@{22}: commit: homepage_working
+[33mb68f619[m HEAD@{23}: commit (amend): homepage_working
+[33m83c059c[m HEAD@{24}: commit (amend): homepage_working
+[33mc31b5a8[m HEAD@{25}: commit (amend): homepage_working
+[33m34f39cd[m HEAD@{26}: commit: homepage_working
+[33md8da22f[m HEAD@{27}: pull --no-stat -v --progress origin master: Fast-forward
+[33mebe6be5[m HEAD@{28}: commit (initial): Initial commit

@@ -1,10 +1,11 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:ui' as ui;
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
-import 'package:screenshot/screenshot.dart';
-import 'package:gallery_saver/gallery_saver.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
@@ -12,14 +13,14 @@ import 'api_config.dart';
 import 'model/CompanyInfo.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:uuid/uuid.dart';
-class EditingPage extends StatefulWidget {
 
+class EditingPage extends StatefulWidget {
   final Map<String, bool> selectedFields;
   final CompanyInfo companyInfo;
 
   const EditingPage({
     required this.selectedFields,
-    required this.companyInfo,  // Pass the CompanyInfo here
+    required this.companyInfo, // Pass the CompanyInfo here
   });
 
   @override
@@ -29,7 +30,7 @@ class EditingPage extends StatefulWidget {
 List<TextBox> _textBoxes = [];
 
 class TextBox {
-  final String identifier;  // add this
+  final String identifier; // add this
 
   Offset offset;
   double width;
@@ -58,7 +59,6 @@ class TextBox {
 int? _selectedTextBoxIndex;
 
 class _EditingPageState extends State<EditingPage> {
-
   String _getCompanyInfoValue(String key) {
     switch (key.toLowerCase()) {
       case 'companyname':
@@ -82,14 +82,13 @@ class _EditingPageState extends State<EditingPage> {
     }
   }
 
-
   List<Map<String, dynamic>> _frames = [];
   List<dynamic> _selectedFrameElements = [];
   final uuid = Uuid();
   void _addTextBox() {
     setState(() {
       _textBoxes.add(TextBox(
-        identifier: uuid.v4(),  // generate unique id here
+        identifier: uuid.v4(), // generate unique id here
         text: 'New Text',
         offset: Offset(100, 100),
         fontSize: 20,
@@ -104,8 +103,8 @@ class _EditingPageState extends State<EditingPage> {
       _selectedElement = 'textBox';
     });
   }
-  bool _showFrame = true;
 
+  bool _showFrame = true;
 
   bool _isResizing = false;
 
@@ -135,7 +134,13 @@ class _EditingPageState extends State<EditingPage> {
   String _iconShape = 'Normal';
   String _iconPosition = 'Right';
 
-  List<String> _selectedSocialIcons = ['Facebook', 'Instagram', 'LinkedIn', 'Twitter', 'YouTube'];
+  List<String> _selectedSocialIcons = [
+    'Facebook',
+    'Instagram',
+    'LinkedIn',
+    'Twitter',
+    'YouTube'
+  ];
   List<String> _selectedIcons = [];
 
   bool _isNameBold = false;
@@ -157,7 +162,6 @@ class _EditingPageState extends State<EditingPage> {
   bool _isInstagramItalic = false;
 
   bool _isSelected = false;
-  final ScreenshotController _screenshotController = ScreenshotController();
   final GlobalKey _canvasKey = GlobalKey();
   Color _nameColor = Colors.white;
   Color _emailColor = Colors.white;
@@ -212,7 +216,7 @@ class _EditingPageState extends State<EditingPage> {
   double _nameFontSize = 18;
   double _emailFontSize = 14;
   Offset _frameOffset = Offset(50, 50);
-  double _frameWidth = 250;  // Adjust frame width and height as per your needs
+  double _frameWidth = 250; // Adjust frame width and height as per your needs
   double _frameHeight = 100;
   double _mobileFontSize = 16;
   double _addressFontSize = 16;
@@ -228,7 +232,6 @@ class _EditingPageState extends State<EditingPage> {
   File? _pickedPhoto;
   String? _selectedElement;
 
-
   String? _selectedFrameUrl;
 
   bool _showName = false;
@@ -243,29 +246,47 @@ class _EditingPageState extends State<EditingPage> {
 
   bool getBold(String identifier) {
     switch (identifier) {
-      case 'name': return _isNameBold;
-      case 'email': return _isEmailBold;
-      case 'mobile': return _isMobileBold;
-      case 'address': return _isAddressBold;
-      case 'facebook': return _isFacebookBold;
-      case 'linkedin': return _isLinkedinBold;
-      case 'twitter': return _isTwitterBold;
-      case 'instagram': return _isInstagramBold;
-      default: return false;
+      case 'name':
+        return _isNameBold;
+      case 'email':
+        return _isEmailBold;
+      case 'mobile':
+        return _isMobileBold;
+      case 'address':
+        return _isAddressBold;
+      case 'facebook':
+        return _isFacebookBold;
+      case 'linkedin':
+        return _isLinkedinBold;
+      case 'twitter':
+        return _isTwitterBold;
+      case 'instagram':
+        return _isInstagramBold;
+      default:
+        return false;
     }
   }
 
   bool getItalic(String identifier) {
     switch (identifier) {
-      case 'name': return _isNameItalic;
-      case 'email': return _isEmailItalic;
-      case 'mobile': return _isMobileItalic;
-      case 'address': return _isAddressItalic;
-      case 'facebook': return _isFacebookItalic;
-      case 'linkedin': return _isLinkedinItalic;
-      case 'twitter': return _isTwitterItalic;
-      case 'instagram': return _isInstagramItalic;
-      default: return false;
+      case 'name':
+        return _isNameItalic;
+      case 'email':
+        return _isEmailItalic;
+      case 'mobile':
+        return _isMobileItalic;
+      case 'address':
+        return _isAddressItalic;
+      case 'facebook':
+        return _isFacebookItalic;
+      case 'linkedin':
+        return _isLinkedinItalic;
+      case 'twitter':
+        return _isTwitterItalic;
+      case 'instagram':
+        return _isInstagramItalic;
+      default:
+        return false;
     }
   }
 
@@ -282,8 +303,6 @@ class _EditingPageState extends State<EditingPage> {
     _showTwitter = widget.selectedFields['twitter'] == true;
     _showInstagram = widget.selectedFields['instagram'] == true;
     _showLogo = widget.selectedFields['logo'] == true;
-
-
   }
 
   void _selectFrame() async {
@@ -299,7 +318,8 @@ class _EditingPageState extends State<EditingPage> {
             itemCount: _frames.length,
             itemBuilder: (context, index) {
               final frame = _frames[index];
-              final String frameUrl = "$baseUrl/practice_api/Frame_images/${frame['img']}";
+              final String frameUrl =
+                  "$baseUrl/practice_api/Frame_images/${frame['img']}";
 
               return GestureDetector(
                 onTap: () async {
@@ -361,7 +381,8 @@ class _EditingPageState extends State<EditingPage> {
     final uri = "$baseUrl/practice_api/getAllFrames.php";
     final res = await http.get(Uri.parse(uri));
     if (res.statusCode == 200) {
-      final List<Map<String, dynamic>> frameList = List<Map<String, dynamic>>.from(jsonDecode(res.body));
+      final List<Map<String, dynamic>> frameList =
+          List<Map<String, dynamic>>.from(jsonDecode(res.body));
       setState(() {
         _frames = frameList;
       });
@@ -410,7 +431,8 @@ class _EditingPageState extends State<EditingPage> {
   void _toggleBold(String identifier) {
     setState(() {
       if (identifier == 'textBox') {
-        _textBoxes[_selectedTextBoxIndex!].isBold = !_textBoxes[_selectedTextBoxIndex!].isBold;
+        _textBoxes[_selectedTextBoxIndex!].isBold =
+            !_textBoxes[_selectedTextBoxIndex!].isBold;
       } else {
         _isBoldMap[identifier] = !_isBoldMap[identifier]!;
       }
@@ -420,7 +442,8 @@ class _EditingPageState extends State<EditingPage> {
   void _toggleItalic(String identifier) {
     setState(() {
       if (identifier == 'textBox') {
-        _textBoxes[_selectedTextBoxIndex!].isItalic = !_textBoxes[_selectedTextBoxIndex!].isItalic;
+        _textBoxes[_selectedTextBoxIndex!].isItalic =
+            !_textBoxes[_selectedTextBoxIndex!].isItalic;
       } else {
         _isItalicMap[identifier] = !_isItalicMap[identifier]!;
       }
@@ -434,25 +457,44 @@ class _EditingPageState extends State<EditingPage> {
   }
 
   Future<void> _saveImage() async {
-    var status = await Permission.storage.request();
-    if (status.isGranted) {
-      final image = await _screenshotController.capture();
-      if (image != null) {
-        final tempDir = await getTemporaryDirectory();
-        final file = await File('${tempDir.path}/edited_image.png').create();
-        await file.writeAsBytes(image);
-        await GallerySaver.saveImage(file.path);
+    try {
+      // Request storage permission
+      var status = await Permission.storage.request();
+      if (!status.isGranted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('✅ Image saved to gallery')),
+          const SnackBar(content: Text('Storage permission denied')),
         );
-      } else {
+        return;
+      }
+
+      // Capture the widget as an image
+      RenderRepaintBoundary boundary = _canvasKey.currentContext!
+          .findRenderObject() as RenderRepaintBoundary;
+      ui.Image image = await boundary.toImage(pixelRatio: 3.0);
+      ByteData? byteData =
+          await image.toByteData(format: ui.ImageByteFormat.png);
+
+      if (byteData != null) {
+        // Save the image
+        final tempDir = await getTemporaryDirectory();
+        final file = await File('${tempDir.path}/business_card.png').create();
+        await file.writeAsBytes(byteData.buffer.asUint8List());
+
+        // Copy to downloads folder
+        final downloadsDir = Directory('${tempDir.parent.path}/Download');
+        if (!await downloadsDir.exists()) {
+          await downloadsDir.create(recursive: true);
+        }
+        final savedFile = await file.copy(
+            '${downloadsDir.path}/business_card_${DateTime.now().millisecondsSinceEpoch}.png');
+
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('❌ Failed to capture image')),
+          SnackBar(content: Text('✅ Image saved to ${savedFile.path}')),
         );
       }
-    } else {
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('❌ Storage permission denied')),
+        const SnackBar(content: Text('❌ Failed to save image')),
       );
     }
   }
@@ -528,16 +570,35 @@ class _EditingPageState extends State<EditingPage> {
                   onTap: () {
                     setState(() {
                       switch (elementId) {
-                        case 'name': _showName = false; break;
-                        case 'email': _showEmail = false; break;
-                        case 'mobile': _showMobile = false; break;
-                        case 'address': _showAddress = false; break;
-                        case 'facebook': _showFacebook = false; break;
-                        case 'linkedin': _showLinkedin = false; break;
-                        case 'twitter': _showTwitter = false; break;
-                        case 'instagram': _showInstagram = false; break;
-                        case 'logo': _showLogo = false; break;
-                        case 'frame': break;
+                        case 'name':
+                          _showName = false;
+                          break;
+                        case 'email':
+                          _showEmail = false;
+                          break;
+                        case 'mobile':
+                          _showMobile = false;
+                          break;
+                        case 'address':
+                          _showAddress = false;
+                          break;
+                        case 'facebook':
+                          _showFacebook = false;
+                          break;
+                        case 'linkedin':
+                          _showLinkedin = false;
+                          break;
+                        case 'twitter':
+                          _showTwitter = false;
+                          break;
+                        case 'instagram':
+                          _showInstagram = false;
+                          break;
+                        case 'logo':
+                          _showLogo = false;
+                          break;
+                        case 'frame':
+                          break;
                       }
                       _selectedElement = null;
                       _isSelected = false;
@@ -557,7 +618,8 @@ class _EditingPageState extends State<EditingPage> {
                 child: CircleAvatar(
                   backgroundColor: Colors.blue,
                   radius: 14,
-                  child: Icon(Icons.zoom_out_map, color: Colors.white, size: 16),
+                  child:
+                      Icon(Icons.zoom_out_map, color: Colors.white, size: 16),
                 ),
               ),
             ],
@@ -583,12 +645,14 @@ class _EditingPageState extends State<EditingPage> {
           fontSize: fontSize,
           fontFamily: getFontFamily(identifier),
           fontWeight: getBold(identifier) ? FontWeight.bold : FontWeight.normal,
-          fontStyle: getItalic(identifier) ? FontStyle.italic : FontStyle.normal,
+          fontStyle:
+              getItalic(identifier) ? FontStyle.italic : FontStyle.normal,
         ),
       ),
       maxLines: 1,
       textDirection: TextDirection.ltr,
-    )..layout()).size;
+    )..layout())
+        .size;
 
     return Stack(
       children: [
@@ -610,7 +674,8 @@ class _EditingPageState extends State<EditingPage> {
             },
             onPanUpdate: (details) {
               setState(() {
-                onUpdateOffset(_initialOffset + (details.globalPosition - _initialFocalPoint));
+                onUpdateOffset(_initialOffset +
+                    (details.globalPosition - _initialFocalPoint));
               });
             },
             child: Stack(
@@ -622,8 +687,12 @@ class _EditingPageState extends State<EditingPage> {
                     color: getTextColor(identifier),
                     fontSize: fontSize,
                     fontFamily: getFontFamily(identifier),
-                    fontWeight: _isBoldMap[identifier]! ? FontWeight.bold : FontWeight.normal,
-                    fontStyle: _isItalicMap[identifier]! ? FontStyle.italic : FontStyle.normal,
+                    fontWeight: _isBoldMap[identifier]!
+                        ? FontWeight.bold
+                        : FontWeight.normal,
+                    fontStyle: _isItalicMap[identifier]!
+                        ? FontStyle.italic
+                        : FontStyle.normal,
                   ),
                 ),
                 // Show close button only if this is selected element
@@ -634,7 +703,8 @@ class _EditingPageState extends State<EditingPage> {
                         // Remove this text box (or element) from your list
                         _removeTextBox(identifier);
                         // Clear selection if needed
-                        if (_selectedElement == identifier) _selectedElement = null;
+                        if (_selectedElement == identifier)
+                          _selectedElement = null;
                       });
                     },
                     child: CircleAvatar(
@@ -648,14 +718,16 @@ class _EditingPageState extends State<EditingPage> {
           ),
         ),
         if (_selectedElement == identifier)
-          _buildSelectionBox(offset, textSize, identifier), // Existing selection box
+          _buildSelectionBox(
+              offset, textSize, identifier), // Existing selection box
       ],
     );
   }
 
   Widget _buildDraggableTextBox(int index) {
     final box = _textBoxes[index];
-    final isSelected = _selectedElement == 'textBox' && _selectedTextBoxIndex == index;
+    final isSelected =
+        _selectedElement == 'textBox' && _selectedTextBoxIndex == index;
 
     return Positioned(
       left: box.offset.dx,
@@ -679,7 +751,8 @@ class _EditingPageState extends State<EditingPage> {
           onPanUpdate: (details) {
             if (!_isResizing) {
               setState(() {
-                box.offset = _initialOffset + (details.globalPosition - _initialFocalPoint);
+                box.offset = _initialOffset +
+                    (details.globalPosition - _initialFocalPoint);
               });
             }
           },
@@ -695,7 +768,9 @@ class _EditingPageState extends State<EditingPage> {
                   height: box.height,
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    border: isSelected ? Border.all(color: Colors.blueAccent) : null,
+                    border: isSelected
+                        ? Border.all(color: Colors.blueAccent)
+                        : null,
                     color: Colors.transparent,
                   ),
                   child: Text(
@@ -706,8 +781,10 @@ class _EditingPageState extends State<EditingPage> {
                       fontSize: box.fontSize,
                       fontFamily: box.fontFamily,
                       color: box.color,
-                      fontWeight: box.isBold ? FontWeight.bold : FontWeight.normal,
-                      fontStyle: box.isItalic ? FontStyle.italic : FontStyle.normal,
+                      fontWeight:
+                          box.isBold ? FontWeight.bold : FontWeight.normal,
+                      fontStyle:
+                          box.isItalic ? FontStyle.italic : FontStyle.normal,
                     ),
                   ),
                 ),
@@ -756,7 +833,8 @@ class _EditingPageState extends State<EditingPage> {
                     child: const CircleAvatar(
                       radius: 12,
                       backgroundColor: Colors.blue,
-                      child: Icon(Icons.zoom_out_map, size: 16, color: Colors.white),
+                      child: Icon(Icons.zoom_out_map,
+                          size: 16, color: Colors.white),
                     ),
                   ),
                 ),
@@ -773,14 +851,15 @@ class _EditingPageState extends State<EditingPage> {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setModalState) {
-            return SingleChildScrollView( // Wrapping with scroll view
+            return SingleChildScrollView(
+              // Wrapping with scroll view
               child: Container(
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text("Social Icon Settings", style: TextStyle(fontWeight: FontWeight.bold)),
-
+                    const Text("Social Icon Settings",
+                        style: TextStyle(fontWeight: FontWeight.bold)),
                     Row(
                       children: [
                         const Text("Show Icons: "),
@@ -793,12 +872,12 @@ class _EditingPageState extends State<EditingPage> {
                         ),
                       ],
                     ),
-
                     const SizedBox(height: 10),
                     const Text("Icon Shape"),
                     Wrap(
                       spacing: 10,
-                      children: ['Normal', 'Circle', 'Round Border'].map((shape) {
+                      children:
+                          ['Normal', 'Circle', 'Round Border'].map((shape) {
                         return ChoiceChip(
                           label: Text(shape),
                           selected: _iconShape == shape,
@@ -809,12 +888,17 @@ class _EditingPageState extends State<EditingPage> {
                         );
                       }).toList(),
                     ),
-
                     const SizedBox(height: 10),
                     const Text("Icon Position"),
                     Wrap(
                       spacing: 10,
-                      children: ['Left', 'Right', 'Top Left', 'Top Right', 'Top'].map((pos) {
+                      children: [
+                        'Left',
+                        'Right',
+                        'Top Left',
+                        'Top Right',
+                        'Top'
+                      ].map((pos) {
                         return ChoiceChip(
                           label: Text(pos),
                           selected: _iconPosition == pos,
@@ -825,7 +909,6 @@ class _EditingPageState extends State<EditingPage> {
                         );
                       }).toList(),
                     ),
-
                     const SizedBox(height: 10),
                     const Text("Select Icons to Show"),
                     Wrap(
@@ -911,7 +994,8 @@ class _EditingPageState extends State<EditingPage> {
               _instagramColor = pickedColor;
               break;
           }
-        }});
+        }
+      });
     }
   }
 
@@ -979,8 +1063,10 @@ class _EditingPageState extends State<EditingPage> {
                   ),
                   onTap: () {
                     setState(() {
-                      if (_selectedElement == 'textBox' && _selectedTextBoxIndex != null) {
-                        _textBoxes[_selectedTextBoxIndex!].fontFamily = _fontFamilies[index];
+                      if (_selectedElement == 'textBox' &&
+                          _selectedTextBoxIndex != null) {
+                        _textBoxes[_selectedTextBoxIndex!].fontFamily =
+                            _fontFamilies[index];
                       } else {
                         switch (_selectedElement) {
                           case 'name':
@@ -1023,112 +1109,6 @@ class _EditingPageState extends State<EditingPage> {
     }
   }
 
-  // Widget _buildDraggableFrame() {
-  //   final Size frameSize = Size(_frameWidth, _frameHeight);
-  //
-  //   if (!_showFrame) return SizedBox.shrink(); // Don't show if deleted
-  //
-  //   return Stack(
-  //     children: [
-  //       Positioned(
-  //         left: _frameOffset.dx,
-  //         top: _frameOffset.dy,
-  //         child: GestureDetector(
-  //           onTap: () {
-  //             setState(() {
-  //               _selectedElement = 'frame';
-  //               _isSelected = true;
-  //             });
-  //           },
-  //           onScaleStart: (details) {
-  //             _initialFocalPoint = details.focalPoint;
-  //             _initialOffset = _frameOffset;
-  //           },
-  //           onScaleUpdate: (details) {
-  //             setState(() {
-  //               _frameOffset = _initialOffset + (details.focalPoint - _initialFocalPoint);
-  //             });
-  //           },
-  //           onLongPressStart: (details) {
-  //             setState(() {
-  //               _initialOffset = _frameOffset;
-  //               _initialFocalPoint = details.globalPosition;
-  //             });
-  //           },
-  //           onLongPressMoveUpdate: (details) {
-  //             setState(() {
-  //               _frameOffset = _initialOffset + (details.globalPosition - _initialFocalPoint);
-  //             });
-  //           },
-  //           child: Stack(
-  //             children: [
-  //               Container(
-  //                 width: _frameWidth,
-  //                 height: _frameHeight,
-  //                 decoration: BoxDecoration(
-  //                   border: Border.all(
-  //                     color: _isSelected ? Colors.red : Colors.transparent,
-  //                     width: 5.0,
-  //                   ),
-  //                   image: DecorationImage(
-  //                     image: NetworkImage(_selectedFrameUrl!),
-  //                     fit: BoxFit.cover,
-  //                   ),
-  //                 ),
-  //               ),
-  //
-  //               // Resizing handle
-  //               if (_selectedElement == 'frame')
-  //                 Positioned(
-  //                   right: 0,
-  //                   bottom: 0,
-  //                   child: GestureDetector(
-  //                     onPanUpdate: (details) {
-  //                       setState(() {
-  //                         _frameWidth += details.delta.dx;
-  //                         _frameHeight += details.delta.dy;
-  //
-  //                         _frameWidth = _frameWidth.clamp(50.0, 500.0);
-  //                         _frameHeight = _frameHeight.clamp(50.0, 500.0);
-  //                       });
-  //                     },
-  //                     child: CircleAvatar(
-  //                       radius: 14,
-  //                       backgroundColor: Colors.blue,
-  //                       child: Icon(Icons.zoom_out_map, size: 16, color: Colors.white),
-  //                     ),
-  //                   ),
-  //                 ),
-  //
-  //               // Close (delete) button
-  //               if (_selectedElement == 'frame')
-  //                 Positioned(
-  //                   left: 0,
-  //                   top: 0,
-  //                   child: GestureDetector(
-  //                     onTap: () {
-  //                       setState(() {
-  //                         _selectedElement = null;
-  //                         _isSelected = false;
-  //                         _showFrame = false;
-  //                         // Fully remove the frame
-  //                       });
-  //                     },
-  //                     child: CircleAvatar(
-  //                       radius: 14,
-  //                       backgroundColor: Colors.red,
-  //                       child: Icon(Icons.close, size: 16, color: Colors.white),
-  //                     ),
-  //                   ),
-  //                 ),
-  //             ],
-  //           ),
-  //         ),
-  //       ),
-  //     ],
-  //   );
-  // }
-
   Widget _buildFrameWithElements() {
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -1159,9 +1139,12 @@ class _EditingPageState extends State<EditingPage> {
 
             // Elements positioned relative to the frame
             ..._selectedFrameElements.map((element) {
-              final double elementX = double.tryParse(element['pos_x'] ?? '0')! * frameScale;
-              final double elementY = double.tryParse(element['pos_y'] ?? '0')! * frameScale;
-              final double fontSize = double.tryParse(element['font_size'] ?? '14')! * frameScale;
+              final double elementX =
+                  double.tryParse(element['pos_x'] ?? '0')! * frameScale;
+              final double elementY =
+                  double.tryParse(element['pos_y'] ?? '0')! * frameScale;
+              final double fontSize =
+                  double.tryParse(element['font_size'] ?? '14')! * frameScale;
 
               return Positioned(
                 left: elementX,
@@ -1170,10 +1153,10 @@ class _EditingPageState extends State<EditingPage> {
                   _getCompanyInfoValue(element['element_type'] ?? ''),
                   style: TextStyle(
                     fontSize: fontSize,
-                    color: Color(int.parse('0xff${element['font_color']?.substring(1)}')),
+                    color: Color(int.parse(
+                        '0xff${element['font_color']?.substring(1)}')),
                   ),
                 ),
-
               );
             }).toList(),
           ],
@@ -1186,11 +1169,16 @@ class _EditingPageState extends State<EditingPage> {
     List<Widget> icons = [];
 
     // Add the selected icons to the list
-    if (_selectedIcons.contains('Facebook')) icons.add(_socialIcon(FontAwesomeIcons.facebook));
-    if (_selectedIcons.contains('Instagram')) icons.add(_socialIcon(FontAwesomeIcons.instagram));
-    if (_selectedIcons.contains('LinkedIn')) icons.add(_socialIcon(FontAwesomeIcons.linkedin));
-    if (_selectedIcons.contains('Twitter')) icons.add(_socialIcon(FontAwesomeIcons.twitter));
-    if (_selectedIcons.contains('YouTube')) icons.add(_socialIcon(FontAwesomeIcons.youtube));
+    if (_selectedIcons.contains('Facebook'))
+      icons.add(_socialIcon(FontAwesomeIcons.facebook));
+    if (_selectedIcons.contains('Instagram'))
+      icons.add(_socialIcon(FontAwesomeIcons.instagram));
+    if (_selectedIcons.contains('LinkedIn'))
+      icons.add(_socialIcon(FontAwesomeIcons.linkedin));
+    if (_selectedIcons.contains('Twitter'))
+      icons.add(_socialIcon(FontAwesomeIcons.twitter));
+    if (_selectedIcons.contains('YouTube'))
+      icons.add(_socialIcon(FontAwesomeIcons.youtube));
 
     if (icons.isEmpty) {
       return Container(); // If no icons are selected, return an empty container
@@ -1212,7 +1200,10 @@ class _EditingPageState extends State<EditingPage> {
       case 'Top Right':
         return Positioned(right: 10, top: 10, child: iconRow);
       case 'Top':
-        return Positioned(top: 10, left: MediaQuery.of(context).size.width / 4, child: iconRow);
+        return Positioned(
+            top: 10,
+            left: MediaQuery.of(context).size.width / 4,
+            child: iconRow);
       default:
         return Positioned(right: 10, top: 50, child: iconRow);
     }
@@ -1223,9 +1214,7 @@ class _EditingPageState extends State<EditingPage> {
       margin: const EdgeInsets.all(4),
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        shape: _iconShape == 'Circle'
-            ? BoxShape.circle
-            : BoxShape.rectangle,
+        shape: _iconShape == 'Circle' ? BoxShape.circle : BoxShape.rectangle,
         // ✅ Only apply borderRadius if shape is rectangle
         borderRadius: _iconShape == 'Round Border' && _iconShape != 'Circle'
             ? BorderRadius.circular(10)
@@ -1254,7 +1243,8 @@ class _EditingPageState extends State<EditingPage> {
             },
             onScaleUpdate: (details) {
               setState(() {
-                _logoOffset = _initialOffset + (details.focalPoint - _initialFocalPoint);
+                _logoOffset =
+                    _initialOffset + (details.focalPoint - _initialFocalPoint);
               });
             },
             onLongPressStart: (details) {
@@ -1265,7 +1255,8 @@ class _EditingPageState extends State<EditingPage> {
             },
             onLongPressMoveUpdate: (details) {
               setState(() {
-                _logoOffset = _initialOffset + (details.globalPosition - _initialFocalPoint);
+                _logoOffset = _initialOffset +
+                    (details.globalPosition - _initialFocalPoint);
               });
             },
             child: Image.file(
@@ -1296,8 +1287,8 @@ class _EditingPageState extends State<EditingPage> {
         children: [
           Expanded(
             child: Center(
-              child: Screenshot(
-                controller: _screenshotController,
+              child: RepaintBoundary(
+                key: _canvasKey,
                 child: GestureDetector(
                   behavior: HitTestBehavior.translucent,
                   onTap: () {
@@ -1306,7 +1297,6 @@ class _EditingPageState extends State<EditingPage> {
                     });
                   },
                   child: Container(
-                    key: _canvasKey,
                     width: screenWidth * 0.95,
                     height: screenWidth * 1,
                     decoration: BoxDecoration(
@@ -1326,7 +1316,9 @@ class _EditingPageState extends State<EditingPage> {
 
                         // Display selected photo if one is picked
                         if (_pickedPhoto != null)
-                          Positioned.fill(child: Image.file(_pickedPhoto!, fit: BoxFit.cover)),
+                          Positioned.fill(
+                              child:
+                                  Image.file(_pickedPhoto!, fit: BoxFit.cover)),
 
                         // // Display the selected frame over the photo
                         // if (_selectedFrameUrl != null)
@@ -1354,8 +1346,6 @@ class _EditingPageState extends State<EditingPage> {
                             identifier: 'name',
                           ),
 
-
-
                         // Display the email if enabled
                         if (_showEmail)
                           _buildDraggableText(
@@ -1367,7 +1357,7 @@ class _EditingPageState extends State<EditingPage> {
                             identifier: 'email',
                           ),
 
-                        if(_showMobile)
+                        if (_showMobile)
                           _buildDraggableText(
                             label: widget.companyInfo.mobile,
                             offset: _mobileOffset,
@@ -1377,7 +1367,7 @@ class _EditingPageState extends State<EditingPage> {
                             identifier: 'mobile',
                           ),
 
-                        if(_showAddress)
+                        if (_showAddress)
                           _buildDraggableText(
                             label: widget.companyInfo.address,
                             offset: _addressOffset,
@@ -1387,7 +1377,7 @@ class _EditingPageState extends State<EditingPage> {
                             identifier: 'address',
                           ),
 
-                        if(_showFacebook)
+                        if (_showFacebook)
                           _buildDraggableText(
                             label: widget.companyInfo.facebook,
                             offset: _facebookOffset,
@@ -1397,7 +1387,7 @@ class _EditingPageState extends State<EditingPage> {
                             identifier: 'facebook',
                           ),
 
-                        if(_showLinkedin)
+                        if (_showLinkedin)
                           _buildDraggableText(
                             label: widget.companyInfo.linkedin,
                             offset: _linkedinOffset,
@@ -1407,7 +1397,7 @@ class _EditingPageState extends State<EditingPage> {
                             identifier: 'linkedin',
                           ),
 
-                        if(_showTwitter)
+                        if (_showTwitter)
                           _buildDraggableText(
                             label: widget.companyInfo.twitter,
                             offset: _twitterOffset,
@@ -1417,7 +1407,7 @@ class _EditingPageState extends State<EditingPage> {
                             identifier: 'twitter',
                           ),
 
-                        if(_showInstagram)
+                        if (_showInstagram)
                           _buildDraggableText(
                             label: widget.companyInfo.instagram,
                             offset: _instagramOffset,
@@ -1464,13 +1454,10 @@ class _EditingPageState extends State<EditingPage> {
                         //   );
                         // }).toList(),
 
-
                         for (int i = 0; i < _textBoxes.length; i++)
                           _buildDraggableTextBox(i),
 
                         if (_showSocialIcons) _buildSocialIcons(),
-
-
                       ],
                     ),
                   ),
@@ -1482,7 +1469,8 @@ class _EditingPageState extends State<EditingPage> {
           Container(
             color: const Color(0xFFb6ae77),
             padding: const EdgeInsets.all(8),
-            child: SingleChildScrollView( // Added scroll in case buttons overflow
+            child: SingleChildScrollView(
+              // Added scroll in case buttons overflow
               scrollDirection: Axis.horizontal,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -1521,7 +1509,6 @@ class _EditingPageState extends State<EditingPage> {
                   // _buildBottomButton('Background', _selectBackgroundImage),
                   //
                   // _buildBottomButton('Sticker', _showStickerPicker),
-
                 ],
               ),
             ),
@@ -1530,8 +1517,6 @@ class _EditingPageState extends State<EditingPage> {
       ),
     );
   }
-
-
 
   Widget _buildBottomButton(String label, VoidCallback onPressed) {
     return ElevatedButton(
@@ -1549,5 +1534,4 @@ class _EditingPageState extends State<EditingPage> {
       ),
     );
   }
-
 }

@@ -7,6 +7,7 @@ import 'api_config.dart';
 Future<void> submitCompanyForm({
   required String companyName,
   required String email,
+  required String password,
   required String facebook,
   required String linkedin,
   required String twitter,
@@ -15,11 +16,13 @@ Future<void> submitCompanyForm({
   required String address,
   required File logo,
 }) async {
-  final uri = Uri.parse('$baseUrl/practice_api/submit_user_data.php'); // <-- Replace with your actual domain
+  final uri = Uri.parse(
+      '$baseUrl/practice_api/submit_user_data.php'); // <-- Replace with your actual domain
   final request = http.MultipartRequest('POST', uri);
 
   request.fields['company_name'] = companyName;
   request.fields['email'] = email;
+  request.fields['password'] = password;
   request.fields['facebook'] = facebook;
   request.fields['linkedin'] = linkedin;
   request.fields['twitter'] = twitter;

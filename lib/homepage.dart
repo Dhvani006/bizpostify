@@ -11,8 +11,6 @@ import 'model/CompanyInfo.dart';
 import 'module/CompanyInfoSelectionDialog.dart';
 
 class HomePage extends StatefulWidget {
-
-
   @override
   State<HomePage> createState() => _HomePageState();
 }
@@ -25,7 +23,6 @@ class _HomePageState extends State<HomePage> {
   String? selectedMaster;
   String? selectedCategory;
   bool isLoading = true;
-  //try
   CompanyInfo companyInfo = CompanyInfo(
     name: '',
     email: '',
@@ -44,9 +41,9 @@ class _HomePageState extends State<HomePage> {
     loadCompanyInfo();
     fetchTemplates();
   }
+
   Future<void> loadCompanyInfo() async {
     final prefs = await SharedPreferences.getInstance();
-
     setState(() {
       companyInfo = CompanyInfo(
         name: prefs.getString('company_name') ?? '',
@@ -64,24 +61,19 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> fetchTemplates() async {
     const String apiUrl = '$baseUrl/practice_api/get_templates.php';
-
     try {
       final response = await http.get(Uri.parse(apiUrl));
-
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-
         setState(() {
           priorityTemplates = data['priority'] ?? [];
           masterCategories = data['general'] ?? [];
           isLoading = false;
         });
       } else {
-        print('Failed to fetch templates');
         setState(() => isLoading = false);
       }
     } catch (e) {
-      print('Error fetching templates: $e');
       setState(() => isLoading = false);
     }
   }
@@ -89,167 +81,223 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        title: const Text('Festival card'),
-        backgroundColor: Colors.amber[700],
-        leading: const Icon(Icons.menu),
+        elevation: 0,
+        backgroundColor: Colors.white,
+        title: const Text(
+          'Biz Postify',
+          style: TextStyle(
+            color: Color(0xFF1E293B),
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.menu, color: Color(0xFF1E293B)),
+          onPressed: () {
+            // Add drawer functionality
+          },
+        ),
         actions: [
           TextButton.icon(
             onPressed: () {
               showDialog(
                 context: context,
                 builder: (context) => CompanyInfoSelectionDialog(
-                  companyInfo: CompanyInfo(
-                    name: companyInfo.name,
-                    email: companyInfo.email,
-                    mobile: companyInfo.mobile,
-                    address: companyInfo.address,
-                    facebook: companyInfo.facebook,
-                    linkedin: companyInfo.linkedin,
-                    twitter: companyInfo.twitter,
-                    instagram: companyInfo.instagram,
-                    logoPath: companyInfo.logoPath,
-                  ),
+                  companyInfo: companyInfo,
                 ),
               );
             },
-            icon: const Icon(Icons.edit, color: Colors.white),
+            icon: const Icon(Icons.edit, color: Color(0xFF6366F1)),
             label: const Text(
               'Customize',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: Color(0xFF6366F1)),
             ),
           ),
         ],
       ),
-
       body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : ListView(
-        padding: const EdgeInsets.all(8),
-        children: [
-          // Top banner
-          Container(
-            height: 200,
-            margin: const EdgeInsets.symmetric(vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.grey[400],
-              borderRadius: BorderRadius.circular(15),
-              border: Border.all(color: Colors.purple),
-            ),
-          ),
-
-          // ---------- General Category Section ----------
-          const Text(
-            'General Categories',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-
-          // Master Category buttons
-          Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            children: masterCategories.map<Widget>((master) {
-              return ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: selectedMaster == master['master_category']
-                      ? Colors.purple
-                      : Colors.grey,
-                ),
-                onPressed: () {
-                  setState(() {
-                    selectedMaster = master['master_category'];
-                    selectedSubCategories = master['categories'];
-                    selectedCategory = null;
-                    selectedTemplates = [];
-                  });
-                },
-                child: Text(master['master_category']),
-              );
-            }).toList(),
-          ),
-
-          const SizedBox(height: 10),
-
-          // Subcategory buttons
-          if (selectedSubCategories.isNotEmpty)
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: selectedSubCategories.map<Widget>((cat) {
-                return OutlinedButton(
-                  style: OutlinedButton.styleFrom(
-                    backgroundColor:
-                    selectedCategory == cat['category'] ? Colors.amber[200] : null,
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      selectedCategory = cat['category'];
-                      selectedTemplates = cat['templates'];
-                    });
-                  },
-                  child: Text(cat['category']),
-                );
-              }).toList(),
-            ),
-
-          const SizedBox(height: 10),
-
-          // Templates grid
-          if (selectedTemplates.isNotEmpty)
-            GridView.builder(
-              physics: const NeverScrollableScrollPhysics(),
-              shrinkWrap: true,
-              itemCount: selectedTemplates.length,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                mainAxisSpacing: 10,
-                crossAxisSpacing: 10,
-                childAspectRatio: 1,
+          ? const Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF6366F1)),
               ),
-              itemBuilder: (context, index) {
-                final imgPath = selectedTemplates[index];
-                return Container(
+            )
+          : ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                // Top banner
+                Container(
+                  height: 200,
+                  margin: const EdgeInsets.only(bottom: 24),
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    image: DecorationImage(
-                      image: NetworkImage("$baseUrl/practice_api/$imgPath"),
-                      fit: BoxFit.cover,
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF6366F1), Color(0xFF14B8A6)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Create Beautiful Cards',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          'Choose from our wide range of templates',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                );
-              },
+                ),
+
+                // General Categories Section
+                const Text(
+                  'Categories',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1E293B),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Master Category buttons
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: masterCategories.map<Widget>((master) {
+                      final isSelected =
+                          selectedMaster == master['master_category'];
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 12),
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: isSelected
+                                ? const Color(0xFF6366F1)
+                                : Colors.white,
+                            foregroundColor: isSelected
+                                ? Colors.white
+                                : const Color(0xFF6366F1),
+                            elevation: isSelected ? 4 : 1,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 12),
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              selectedMaster = master['master_category'];
+                              selectedSubCategories = master['categories'];
+                              selectedCategory = null;
+                              selectedTemplates = [];
+                            });
+                          },
+                          child: Text(master['master_category']),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // Subcategory chips
+                if (selectedSubCategories.isNotEmpty)
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: selectedSubCategories.map<Widget>((cat) {
+                      final isSelected = selectedCategory == cat['category'];
+                      return FilterChip(
+                        label: Text(cat['category']),
+                        selected: isSelected,
+                        onSelected: (selected) {
+                          setState(() {
+                            selectedCategory = cat['category'];
+                            selectedTemplates = cat['templates'];
+                          });
+                        },
+                        backgroundColor: Colors.white,
+                        selectedColor: const Color(0xFFE0E7FF),
+                        checkmarkColor: const Color(0xFF6366F1),
+                        labelStyle: TextStyle(
+                          color: isSelected
+                              ? const Color(0xFF6366F1)
+                              : const Color(0xFF64748B),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+
+                const SizedBox(height: 24),
+
+                // Templates grid
+                if (selectedTemplates.isNotEmpty) ...[
+                  GridView.builder(
+                    physics: const NeverScrollableScrollPhysics(),
+                    shrinkWrap: true,
+                    itemCount: selectedTemplates.length,
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      mainAxisSpacing: 16,
+                      crossAxisSpacing: 16,
+                      childAspectRatio: 1,
+                    ),
+                    itemBuilder: (context, index) {
+                      final imgPath = selectedTemplates[index];
+                      return Card(
+                        elevation: 4,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.network(
+                            "$baseUrl/practice_api/$imgPath",
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 32),
+                ],
+
+                // Priority Categories
+                for (var item in priorityTemplates)
+                  _buildCategorySection(item['category'], item['templates']),
+              ],
             ),
-
-          const SizedBox(height: 30),
-
-          // ---------- Priority Categories ----------
-          for (var item in priorityTemplates)
-            _buildCategorySection(item['category'], item['templates']),
-
-          const SizedBox(height: 20),
-
-
-
-
-        ],
-      ),
     );
   }
 
   Widget _buildCategorySection(String category, List<dynamic> templates) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.only(bottom: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Category title and See More
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
                 category,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1E293B),
+                ),
               ),
               TextButton(
                 onPressed: () {
@@ -263,31 +311,41 @@ class _HomePageState extends State<HomePage> {
                     ),
                   );
                 },
-                child: const Text('see more', style: TextStyle(color: Colors.purple)),
+                child: const Text(
+                  'See More',
+                  style: TextStyle(
+                    color: Color(0xFF6366F1),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
-
             ],
           ),
-          const SizedBox(height: 8),
-
-          // 2 template preview
-          Row(
-            children: [
-              for (var imgPath in templates.take(2))
-                Expanded(
-                  child: Container(
-                    height: 100,
-                    margin: const EdgeInsets.only(right: 8),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      image: DecorationImage(
-                        image: NetworkImage("$baseUrl/practice_api/$imgPath"),
+          const SizedBox(height: 12),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: templates.take(3).map((imgPath) {
+                return Container(
+                  width: 200,
+                  height: 120,
+                  margin: const EdgeInsets.only(right: 12),
+                  child: Card(
+                    elevation: 4,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.network(
+                        "$baseUrl/practice_api/$imgPath",
                         fit: BoxFit.cover,
                       ),
                     ),
                   ),
-                ),
-            ],
+                );
+              }).toList(),
+            ),
           ),
         ],
       ),
