@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:async';
+import 'dart:io';
 import 'details.dart';
 import 'homepage.dart';
 import 'api_config.dart';
@@ -46,7 +48,7 @@ class _LoginPageState extends State<LoginPage> {
                           style: TextStyle(
                             fontSize: 32,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF1E293B),
+                            color: Color(0xFF4A4A4A),
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -54,7 +56,7 @@ class _LoginPageState extends State<LoginPage> {
                           'Create beautiful business cards',
                           style: TextStyle(
                             fontSize: 16,
-                            color: Color(0xFF64748B),
+                            color: Color(0xFF6B6B6B),
                           ),
                         ),
                       ],
@@ -78,7 +80,7 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFF6366F1)),
+                        borderSide: const BorderSide(color: Color(0xFFEFC997)),
                       ),
                     ),
                     validator: (value) {
@@ -121,7 +123,7 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFF6366F1)),
+                        borderSide: const BorderSide(color: Color(0xFFEFC997)),
                       ),
                     ),
                     validator: (value) {
@@ -168,17 +170,47 @@ class _LoginPageState extends State<LoginPage> {
                                     'email': _emailController.text,
                                     'password': _passwordController.text,
                                   },
+                                ).timeout(
+                                  const Duration(seconds: 10),
+                                  onTimeout: () {
+                                    throw TimeoutException(
+                                        'Connection timed out');
+                                  },
                                 );
 
+                                if (response.statusCode != 200) {
+                                  throw Exception(
+                                      'Server error: ${response.statusCode}');
+                                }
+
                                 final data = jsonDecode(response.body);
+                                print('Login response: $data'); // Debug print
 
                                 if (data['status'] == 'success') {
-                                  // Save user data
                                   final prefs =
                                       await SharedPreferences.getInstance();
+                                  await prefs.setBool('is_logged_in', true);
                                   await prefs.setString(
                                       'user_id', data['user_id'].toString());
                                   await prefs.setString('email', data['email']);
+
+                                  // Save all company information
+                                  await prefs.setString('company_name',
+                                      data['company_name'] ?? '');
+                                  await prefs.setString(
+                                      'mobile', data['mobile'] ?? '');
+                                  await prefs.setString(
+                                      'address', data['address'] ?? '');
+                                  await prefs.setString(
+                                      'facebook', data['facebook'] ?? '');
+                                  await prefs.setString(
+                                      'linkedin', data['linkedin'] ?? '');
+                                  await prefs.setString(
+                                      'twitter', data['twitter'] ?? '');
+                                  await prefs.setString(
+                                      'instagram', data['instagram'] ?? '');
+                                  await prefs.setString(
+                                      'logo_path', data['logo_path'] ?? '');
 
                                   // Navigate to homepage
                                   Navigator.pushReplacement(
@@ -188,7 +220,7 @@ class _LoginPageState extends State<LoginPage> {
                                     ),
                                   );
                                 } else {
-                                  // Show error message
+                                  // Show error message from server
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
                                       content: Text(
@@ -197,12 +229,27 @@ class _LoginPageState extends State<LoginPage> {
                                     ),
                                   );
                                 }
-                              } catch (e) {
-                                // Show error message for network/server errors
+                              } on TimeoutException {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
                                     content: Text(
-                                        'An error occurred. Please check your internet connection.'),
+                                        'Connection timed out. Please try again.'),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                              } on SocketException {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                        'No internet connection. Please check your network.'),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                              } catch (e) {
+                                print('Login error: $e'); // Debug print
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Error: ${e.toString()}'),
                                     backgroundColor: Colors.red,
                                   ),
                                 );
@@ -214,7 +261,7 @@ class _LoginPageState extends State<LoginPage> {
                             }
                           },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF6366F1),
+                      backgroundColor: const Color(0xFFEFC997),
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -250,15 +297,16 @@ class _LoginPageState extends State<LoginPage> {
                       TextButton(
                         onPressed: () {
                           Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => CompanyFormPage()),
-                          );
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => CompanyFormPage(
+                                        changes: false,
+                                      )));
                         },
                         child: const Text(
                           'Sign Up',
                           style: TextStyle(
-                            color: Color(0xFF6366F1),
+                            color: Color(0xFFEFC997),
                             fontWeight: FontWeight.bold,
                           ),
                         ),

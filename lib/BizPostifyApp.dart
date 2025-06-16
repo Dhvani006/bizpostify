@@ -113,13 +113,13 @@ class _SplashScreenState extends State<SplashScreen>
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             ScaleTransition(
-              scale: _animation,
-              child: Image.asset(
-                'assets/images/splash_logo.png',
-                width: MediaQuery.of(context).size.width * 0.5,
-                fit: BoxFit.cover,
-              ),
-            ),
+          scale: _animation,
+          child: Image.asset(
+            'assets/images/splash_logo.png',
+            width: MediaQuery.of(context).size.width * 0.5,
+            fit: BoxFit.cover,
+          ),
+        ),
             const SizedBox(height: 24),
             const Text(
               'Biz Postify',

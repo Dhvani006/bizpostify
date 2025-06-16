@@ -17,10 +17,12 @@ import 'package:uuid/uuid.dart';
 class EditingPage extends StatefulWidget {
   final Map<String, bool> selectedFields;
   final CompanyInfo companyInfo;
+  final String? templateUrl;
 
   const EditingPage({
     required this.selectedFields,
-    required this.companyInfo, // Pass the CompanyInfo here
+    required this.companyInfo,
+    this.templateUrl,
   });
 
   @override
@@ -244,56 +246,69 @@ class _EditingPageState extends State<EditingPage> {
   bool _showInstagram = false;
   bool _showLogo = false;
 
-  bool getBold(String identifier) {
-    switch (identifier) {
-      case 'name':
-        return _isNameBold;
-      case 'email':
-        return _isEmailBold;
-      case 'mobile':
-        return _isMobileBold;
-      case 'address':
-        return _isAddressBold;
-      case 'facebook':
-        return _isFacebookBold;
-      case 'linkedin':
-        return _isLinkedinBold;
-      case 'twitter':
-        return _isTwitterBold;
-      case 'instagram':
-        return _isInstagramBold;
-      default:
-        return false;
-    }
-  }
+  NetworkImage? _templateImage;
 
-  bool getItalic(String identifier) {
-    switch (identifier) {
-      case 'name':
-        return _isNameItalic;
-      case 'email':
-        return _isEmailItalic;
-      case 'mobile':
-        return _isMobileItalic;
-      case 'address':
-        return _isAddressItalic;
-      case 'facebook':
-        return _isFacebookItalic;
-      case 'linkedin':
-        return _isLinkedinItalic;
-      case 'twitter':
-        return _isTwitterItalic;
-      case 'instagram':
-        return _isInstagramItalic;
-      default:
-        return false;
+  void _initializeFieldOffsets() {
+    final List<String> fieldOrder = [
+      'name',
+      'email',
+      'mobile',
+      'address',
+      'facebook',
+      'linkedin',
+      'twitter',
+      'instagram'
+    ];
+    final selectedCount =
+        fieldOrder.where((f) => widget.selectedFields[f] == true).length;
+    if (selectedCount == 0) return;
+
+    // Get the available height for the canvas (matches your canvas height)
+    final double canvasHeight = 0.95 * MediaQuery.of(context).size.width;
+    final double startY = 40; // Start a bit below the top
+    final double endY = canvasHeight - 40; // Leave some space at the bottom
+    final double gap =
+        (endY - startY) / (selectedCount > 1 ? selectedCount - 1 : 1);
+
+    double currentY = startY;
+    double startX = 50;
+
+    for (var field in fieldOrder) {
+      if (widget.selectedFields[field] == true) {
+        switch (field) {
+          case 'name':
+            _nameOffset = Offset(startX, currentY);
+            break;
+          case 'email':
+            _emailOffset = Offset(startX, currentY);
+            break;
+          case 'mobile':
+            _mobileOffset = Offset(startX, currentY);
+            break;
+          case 'address':
+            _addressOffset = Offset(startX, currentY);
+            break;
+          case 'facebook':
+            _facebookOffset = Offset(startX, currentY);
+            break;
+          case 'linkedin':
+            _linkedinOffset = Offset(startX, currentY);
+            break;
+          case 'twitter':
+            _twitterOffset = Offset(startX, currentY);
+            break;
+          case 'instagram':
+            _instagramOffset = Offset(startX, currentY);
+            break;
+        }
+        currentY += gap;
+      }
     }
   }
 
   @override
   void initState() {
     super.initState();
-
     _showName = widget.selectedFields['name'] == true;
     _showEmail = widget.selectedFields['email'] == true;
     _showMobile = widget.selectedFields['mobile'] == true;
@@ -303,6 +318,15 @@ class _EditingPageState extends State<EditingPage> {
     _showTwitter = widget.selectedFields['twitter'] == true;
     _showInstagram = widget.selectedFields['instagram'] == true;
     _showLogo = widget.selectedFields['logo'] == true;
+
+    if (widget.templateUrl != null) {
+      _templateImage = NetworkImage(widget.templateUrl!);
+    }
+    // Ensure offsets are set after layout
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initializeFieldOffsets();
+      setState(() {});
+    });
   }
 
   void _selectFrame() async {
@@ -679,7 +703,6 @@ class _EditingPageState extends State<EditingPage> {
               });
             },
             child: Stack(
-              alignment: Alignment.topRight,
               children: [
                 Text(
                   label,
@@ -695,24 +718,6 @@ class _EditingPageState extends State<EditingPage> {
                         : FontStyle.normal,
                   ),
                 ),
-                // Show close button only if this is selected element
-                if (_selectedElement == identifier)
-                  GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        // Remove this text box (or element) from your list
-                        _removeTextBox(identifier);
-                        // Clear selection if needed
-                        if (_selectedElement == identifier)
-                          _selectedElement = null;
-                      });
-                    },
-                    child: CircleAvatar(
-                      radius: 10,
-                      backgroundColor: Colors.red,
-                      child: Icon(Icons.close, size: 12, color: Colors.white),
-                    ),
-                  ),
               ],
             ),
           ),
@@ -848,18 +853,36 @@ class _EditingPageState extends State<EditingPage> {
   void _showSocialSettings() {
     showModalBottomSheet(
       context: context,
+      backgroundColor: const Color(0xFFE8E0D3),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setModalState) {
             return SingleChildScrollView(
-              // Wrapping with scroll view
               child: Container(
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text("Social Icon Settings",
-                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEFC997),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    Text(
+                      "Social Icon Settings",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                        color: const Color(0xFF4A4A4A),
+                      ),
+                    ),
                     Row(
                       children: [
                         const Text("Show Icons: "),
@@ -949,14 +972,25 @@ class _EditingPageState extends State<EditingPage> {
   void _selectTextColor(String identifier) async {
     final pickedColor = await showDialog<Color>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Pick a color'),
-        content: SingleChildScrollView(
-          child: BlockPicker(
-            pickerColor: identifier == 'textBox'
-                ? _textBoxes[_selectedTextBoxIndex!].color
-                : getTextColor(identifier),
-            onColorChanged: (color) => Navigator.of(context).pop(color),
+      builder: (context) => Theme(
+        data: Theme.of(context).copyWith(
+          dialogBackgroundColor: const Color(0xFFE8E0D3),
+        ),
+        child: AlertDialog(
+          title: Text(
+            'Pick a color',
+            style: TextStyle(color: const Color(0xFF4A4A4A)),
+          ),
+          content: SingleChildScrollView(
+            child: BlockPicker(
+              pickerColor: identifier == 'textBox'
+                  ? _textBoxes[_selectedTextBoxIndex!].color
+                  : getTextColor(identifier),
+              onColorChanged: (color) => Navigator.of(context).pop(color),
+            ),
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
           ),
         ),
       ),
@@ -1002,23 +1036,39 @@ class _EditingPageState extends State<EditingPage> {
   Color getTextColor(String identifier) {
     switch (identifier) {
       case 'name':
-        return _nameColor;
+        return _nameColor.value == 0xFFFFFFFF
+            ? const Color(0xFFEFC997)
+            : _nameColor;
       case 'email':
-        return _emailColor;
+        return _emailColor.value == 0xFFFFFFFF
+            ? const Color(0xFFEFC997)
+            : _emailColor;
       case 'mobile':
-        return _mobileColor;
+        return _mobileColor.value == 0xFFFFFFFF
+            ? const Color(0xFFEFC997)
+            : _mobileColor;
       case 'address':
-        return _addressColor;
+        return _addressColor.value == 0xFFFFFFFF
+            ? const Color(0xFFEFC997)
+            : _addressColor;
       case 'facebook':
-        return _facebookColor;
+        return _facebookColor.value == 0xFFFFFFFF
+            ? const Color(0xFFEFC997)
+            : _facebookColor;
       case 'linkedin':
-        return _linkedinColor;
+        return _linkedinColor.value == 0xFFFFFFFF
+            ? const Color(0xFFEFC997)
+            : _linkedinColor;
       case 'twitter':
-        return _twitterColor;
+        return _twitterColor.value == 0xFFFFFFFF
+            ? const Color(0xFFEFC997)
+            : _twitterColor;
       case 'instagram':
-        return _instagramColor;
+        return _instagramColor.value == 0xFFFFFFFF
+            ? const Color(0xFFEFC997)
+            : _instagramColor;
       default:
-        return Colors.black;
+        return const Color(0xFFEFC997);
     }
   }
 
@@ -1259,10 +1309,30 @@ class _EditingPageState extends State<EditingPage> {
                     (details.globalPosition - _initialFocalPoint);
               });
             },
-            child: Image.file(
-              File(widget.companyInfo.logoPath),
-              height: _logoSize,
-            ),
+            child: widget.companyInfo.logoPath.isNotEmpty
+                ? Image.network(
+                    widget.companyInfo.logoPath,
+                    height: _logoSize,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return SizedBox(
+                        height: _logoSize,
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            value: loadingProgress.expectedTotalBytes != null
+                                ? loadingProgress.cumulativeBytesLoaded /
+                                    loadingProgress.expectedTotalBytes!
+                                : null,
+                          ),
+                        ),
+                      );
+                    },
+                    errorBuilder: (context, error, stackTrace) {
+                      print('Error loading logo: $error');
+                      return Icon(Icons.image_not_supported, size: _logoSize);
+                    },
+                  )
+                : Icon(Icons.image_not_supported, size: _logoSize),
           ),
         ),
         if (_selectedElement == 'logo')
@@ -1271,20 +1341,78 @@ class _EditingPageState extends State<EditingPage> {
     );
   }
 
+  bool getBold(String identifier) {
+    switch (identifier) {
+      case 'name':
+        return _isNameBold;
+      case 'email':
+        return _isEmailBold;
+      case 'mobile':
+        return _isMobileBold;
+      case 'address':
+        return _isAddressBold;
+      case 'facebook':
+        return _isFacebookBold;
+      case 'linkedin':
+        return _isLinkedinBold;
+      case 'twitter':
+        return _isTwitterBold;
+      case 'instagram':
+        return _isInstagramBold;
+      default:
+        return false;
+    }
+  }
+
+  bool getItalic(String identifier) {
+    switch (identifier) {
+      case 'name':
+        return _isNameItalic;
+      case 'email':
+        return _isEmailItalic;
+      case 'mobile':
+        return _isMobileItalic;
+      case 'address':
+        return _isAddressItalic;
+      case 'facebook':
+        return _isFacebookItalic;
+      case 'linkedin':
+        return _isLinkedinItalic;
+      case 'twitter':
+        return _isTwitterItalic;
+      case 'instagram':
+        return _isInstagramItalic;
+      default:
+        return false;
+    }
+  }
+
   @override
   @override
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
+      backgroundColor: const Color(0xFFE8E0D3),
       appBar: AppBar(
-        title: const Text('Edit Image'),
+        elevation: 0,
+        backgroundColor: const Color(0xFFEFC997),
+        title: const Text(
+          'Edit Image',
+          style: TextStyle(
+            color: Color(0xFF4A4A4A),
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         actions: [
-          IconButton(icon: const Icon(Icons.save), onPressed: _saveImage),
+          IconButton(
+              icon: const Icon(Icons.save, color: Color(0xFF4A4A4A)),
+              onPressed: _saveImage),
         ],
       ),
       body: Column(
         children: [
+          const SizedBox(height: 16),
           Expanded(
             child: Center(
               child: RepaintBoundary(
@@ -1300,34 +1428,35 @@ class _EditingPageState extends State<EditingPage> {
                     width: screenWidth * 0.95,
                     height: screenWidth * 1,
                     decoration: BoxDecoration(
-                      color: Colors.black,
-                      border: Border.all(color: Colors.grey),
+                      color: const Color(
+                          0xFF1E1E1E), // Darker background for better text visibility
+                      border:
+                          Border.all(color: const Color(0xFFEFC997), width: 2),
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
                     child: Stack(
                       children: [
-                        // Background image (optional)
-                        // if (_selectedBackgroundImage != null)
-                        //   Positioned.fill(
-                        //     child: Image.asset(
-                        //       _selectedBackgroundImage!,
-                        //       fit: BoxFit.cover,
-                        //     ),
-                        //   ),
+                        // Display template as background if available
+                        if (_templateImage != null)
+                          Positioned.fill(
+                            child: Image(
+                              image: _templateImage!,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
 
                         // Display selected photo if one is picked
                         if (_pickedPhoto != null)
                           Positioned.fill(
-                              child:
-                                  Image.file(_pickedPhoto!, fit: BoxFit.cover)),
-
-                        // // Display the selected frame over the photo
-                        // if (_selectedFrameUrl != null)
-                        //   Positioned.fill(
-                        //     child: Image.network(
-                        //       _selectedFrameUrl!,
-                        //       // Frame adjusts to fill the container
-                        //     ),
-                        //   ),
+                            child: Image.file(_pickedPhoto!, fit: BoxFit.cover),
+                          ),
 
                         if (_selectedFrameUrl != null)
                           _buildFrameWithElements(),
@@ -1417,43 +1546,6 @@ class _EditingPageState extends State<EditingPage> {
                             identifier: 'instagram',
                           ),
 
-                        // ..._stickers.map((sticker) {
-                        //   return Positioned(
-                        //     left: sticker.position.dx,
-                        //     top: sticker.position.dy,
-                        //     child: GestureDetector(
-                        //       onPanUpdate: (details) {
-                        //         setState(() {
-                        //           sticker.position += details.delta;
-                        //         });
-                        //       },
-                        //       child: Stack(
-                        //         alignment: Alignment.topRight,
-                        //         children: [
-                        //           Image.asset(
-                        //             sticker.assetPath,
-                        //             width: 80,
-                        //             height: 80,
-                        //             fit: BoxFit.contain,
-                        //           ),
-                        //           GestureDetector(
-                        //             onTap: () {
-                        //               setState(() {
-                        //                 _stickers.remove(sticker);
-                        //               });
-                        //             },
-                        //             child: CircleAvatar(
-                        //               radius: 10,
-                        //               backgroundColor: Colors.red,
-                        //               child: Icon(Icons.close, size: 12, color: Colors.white),
-                        //             ),
-                        //           ),
-                        //         ],
-                        //       ),
-                        //     ),
-                        //   );
-                        // }).toList(),
-
                         for (int i = 0; i < _textBoxes.length; i++)
                           _buildDraggableTextBox(i),
 
@@ -1465,50 +1557,56 @@ class _EditingPageState extends State<EditingPage> {
               ),
             ),
           ),
-          // Bottom buttons for actions like selecting photo, frame, etc.
+          const SizedBox(height: 16),
           Container(
-            color: const Color(0xFFb6ae77),
-            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: const Color(0xFFEFC997),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(20)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, -2),
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.fromLTRB(12, 16, 12, 24),
             child: SingleChildScrollView(
-              // Added scroll in case buttons overflow
               scrollDirection: Axis.horizontal,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  _buildBottomButton('Add photo', _pickPhoto),
-                  _buildBottomButton('Frame', _selectFrame),
-                  _buildBottomButton('Text Color', () {
+                  _buildBottomButton(
+                      'Add photo', Icons.add_photo_alternate, _pickPhoto),
+                  _buildBottomButton(
+                      'Frame', Icons.crop_original, _selectFrame),
+                  _buildBottomButton('Text Color', Icons.format_color_text, () {
                     if (_selectedTextBoxIndex != null) {
                       _selectTextColor('textBox');
                     } else if (_selectedElement != null) {
                       _selectTextColor(_selectedElement!);
                     }
                   }),
-
-                  _buildBottomButton('Text Font', _selectTextFont),
-                  _buildBottomButton('Bold', () {
+                  _buildBottomButton(
+                      'Text Font', Icons.font_download, _selectTextFont),
+                  _buildBottomButton('Bold', Icons.format_bold, () {
                     if (_selectedTextBoxIndex != null) {
                       _toggleBold('textBox');
                     } else if (_selectedElement != null) {
                       _toggleBold(_selectedElement!);
                     }
                   }),
-
-                  _buildBottomButton('Italic', () {
+                  _buildBottomButton('Italic', Icons.format_italic, () {
                     if (_selectedTextBoxIndex != null) {
                       _toggleItalic('textBox');
                     } else if (_selectedElement != null) {
                       _toggleItalic(_selectedElement!);
                     }
                   }),
-
-                  _buildBottomButton('TextBox', _addTextBox),
-
-                  _buildBottomButton('Social', _showSocialSettings),
-
-                  // _buildBottomButton('Background', _selectBackgroundImage),
-                  //
-                  // _buildBottomButton('Sticker', _showStickerPicker),
+                  _buildBottomButton('TextBox', Icons.text_fields, _addTextBox),
+                  _buildBottomButton(
+                      'Social', Icons.share, _showSocialSettings),
                 ],
               ),
             ),
@@ -1518,19 +1616,51 @@ class _EditingPageState extends State<EditingPage> {
     );
   }
 
-  Widget _buildBottomButton(String label, VoidCallback onPressed) {
-    return ElevatedButton(
-      onPressed: onPressed,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: const Color(0xFFb6ae77),
-        foregroundColor: Colors.black,
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
-        elevation: 2,
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-        textAlign: TextAlign.center,
+  Widget _buildBottomButton(
+      String label, IconData icon, VoidCallback onPressed) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 6),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFFE8E0D3),
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: onPressed,
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  child: Icon(
+                    icon,
+                    color: const Color(0xFF4A4A4A),
+                    size: 24,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Color(0xFF4A4A4A),
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
       ),
     );
   }

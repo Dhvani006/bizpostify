@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'editing_page.dart';
 import 'model/CompanyInfo.dart';
 import 'module/CompanyInfoSelectionDialog.dart';
+import 'details.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -16,6 +17,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   List<dynamic> priorityTemplates = [];
   List<dynamic> masterCategories = [];
   List<dynamic> selectedSubCategories = [];
@@ -48,12 +50,12 @@ class _HomePageState extends State<HomePage> {
       companyInfo = CompanyInfo(
         name: prefs.getString('company_name') ?? '',
         email: prefs.getString('email') ?? '',
+        mobile: prefs.getString('mobile') ?? '',
+        address: prefs.getString('address') ?? '',
         facebook: prefs.getString('facebook') ?? '',
         linkedin: prefs.getString('linkedin') ?? '',
         twitter: prefs.getString('twitter') ?? '',
         instagram: prefs.getString('instagram') ?? '',
-        mobile: prefs.getString('mobile') ?? '',
-        address: prefs.getString('address') ?? '',
         logoPath: prefs.getString('logo_path') ?? '',
       );
     });
@@ -81,21 +83,22 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      key: _scaffoldKey,
+      backgroundColor: const Color.fromARGB(255, 255, 255, 255),
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: Colors.white,
+        backgroundColor: const Color(0xFFE8E0D3),
         title: const Text(
           'Biz Postify',
           style: TextStyle(
-            color: Color(0xFF1E293B),
+            color: Color(0xFF4A4A4A),
             fontWeight: FontWeight.bold,
           ),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.menu, color: Color(0xFF1E293B)),
+          icon: const Icon(Icons.menu, color: Color(0xFF4A4A4A)),
           onPressed: () {
-            // Add drawer functionality
+            _scaffoldKey.currentState?.openDrawer();
           },
         ),
         actions: [
@@ -108,18 +111,155 @@ class _HomePageState extends State<HomePage> {
                 ),
               );
             },
-            icon: const Icon(Icons.edit, color: Color(0xFF6366F1)),
+            icon: const Icon(Icons.edit, color: Color(0xFFEFC997)),
             label: const Text(
               'Customize',
-              style: TextStyle(color: Color(0xFF6366F1)),
+              style: TextStyle(color: Color(0xFFEFC997)),
             ),
           ),
         ],
       ),
+      drawer: Drawer(
+        child: Column(
+          children: [
+            DrawerHeader(
+              decoration: const BoxDecoration(
+                color: Color(0xFFE8E0D3),
+              ),
+              child: SafeArea(
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 70,
+                        height: 70,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(35),
+                          child: companyInfo.logoPath.isNotEmpty
+                              ? Image.network(
+                                  companyInfo.logoPath.startsWith('http')
+                                      ? companyInfo.logoPath
+                                      : "$baseUrl/practice_api/uploaded_logo/${companyInfo.logoPath}",
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    print('Error loading logo: $error');
+                                    return const Icon(
+                                      Icons.business,
+                                      size: 35,
+                                      color: Color(0xFF4A4A4A),
+                                    );
+                                  },
+                                )
+                              : const Icon(
+                                  Icons.business,
+                                  size: 35,
+                                  color: Color(0xFF4A4A4A),
+                                ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Flexible(
+                        child: Text(
+                          companyInfo.name.isNotEmpty
+                              ? companyInfo.name
+                              : 'Company Name',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF4A4A4A),
+                          ),
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Flexible(
+                        child: Text(
+                          companyInfo.email.isNotEmpty ? companyInfo.email : '',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: const Color(0xFF4A4A4A).withOpacity(0.7),
+                          ),
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Container(
+              height: 1,
+              color: Colors.grey.withOpacity(0.1),
+            ),
+            ListTile(
+              leading: const Icon(Icons.edit, color: Color(0xFF4A4A4A)),
+              title: const Text(
+                'Edit Profile',
+                style: TextStyle(
+                  color: Color(0xFF4A4A4A),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const CompanyFormPage(changes: true),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.logout, color: Color(0xFF4A4A4A)),
+              title: const Text(
+                'Logout',
+                style: TextStyle(
+                  color: Color(0xFF4A4A4A),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              onTap: () {
+                // TODO: Implement logout logic
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        ),
+      ),
       body: isLoading
           ? const Center(
               child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF6366F1)),
+                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFEFC997)),
               ),
             )
           : ListView(
@@ -131,7 +271,7 @@ class _HomePageState extends State<HomePage> {
                   margin: const EdgeInsets.only(bottom: 24),
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [Color(0xFF6366F1), Color(0xFF14B8A6)],
+                      colors: [Color(0xFFEFC997), Color(0xFFE8E0D3)],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
@@ -185,11 +325,11 @@ class _HomePageState extends State<HomePage> {
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: isSelected
-                                ? const Color(0xFF6366F1)
+                                ? const Color(0xFFEFC997)
                                 : Colors.white,
                             foregroundColor: isSelected
                                 ? Colors.white
-                                : const Color(0xFF6366F1),
+                                : const Color(0xFFEFC997),
                             elevation: isSelected ? 4 : 1,
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 20, vertical: 12),
@@ -228,12 +368,12 @@ class _HomePageState extends State<HomePage> {
                           });
                         },
                         backgroundColor: Colors.white,
-                        selectedColor: const Color(0xFFE0E7FF),
-                        checkmarkColor: const Color(0xFF6366F1),
+                        selectedColor: const Color(0xFFEFC997),
+                        checkmarkColor: Colors.white,
                         labelStyle: TextStyle(
                           color: isSelected
-                              ? const Color(0xFF6366F1)
-                              : const Color(0xFF64748B),
+                              ? Colors.white
+                              : const Color(0xFF6B6B6B),
                         ),
                       );
                     }).toList(),
@@ -256,16 +396,40 @@ class _HomePageState extends State<HomePage> {
                     ),
                     itemBuilder: (context, index) {
                       final imgPath = selectedTemplates[index];
-                      return Card(
-                        elevation: 4,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: Image.network(
-                            "$baseUrl/practice_api/$imgPath",
-                            fit: BoxFit.cover,
+                      return GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => EditingPage(
+                                selectedFields: {
+                                  'name': true,
+                                  'email': true,
+                                  'mobile': true,
+                                  'address': true,
+                                  'facebook': true,
+                                  'linkedin': true,
+                                  'twitter': true,
+                                  'instagram': true,
+                                  'logo': true,
+                                },
+                                companyInfo: companyInfo,
+                                templateUrl: "$baseUrl/practice_api/$imgPath",
+                              ),
+                            ),
+                          );
+                        },
+                        child: Card(
+                          elevation: 4,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.network(
+                              "$baseUrl/practice_api/$imgPath",
+                              fit: BoxFit.cover,
+                            ),
                           ),
                         ),
                       );
@@ -326,20 +490,44 @@ class _HomePageState extends State<HomePage> {
             scrollDirection: Axis.horizontal,
             child: Row(
               children: templates.take(3).map((imgPath) {
-                return Container(
-                  width: 200,
-                  height: 120,
-                  margin: const EdgeInsets.only(right: 12),
-                  child: Card(
-                    elevation: 4,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Image.network(
-                        "$baseUrl/practice_api/$imgPath",
-                        fit: BoxFit.cover,
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => EditingPage(
+                          selectedFields: {
+                            'name': true,
+                            'email': true,
+                            'mobile': true,
+                            'address': true,
+                            'facebook': true,
+                            'linkedin': true,
+                            'twitter': true,
+                            'instagram': true,
+                            'logo': true,
+                          },
+                          companyInfo: companyInfo,
+                          templateUrl: "$baseUrl/practice_api/$imgPath",
+                        ),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    width: 200,
+                    height: 120,
+                    margin: const EdgeInsets.only(right: 12),
+                    child: Card(
+                      elevation: 4,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.network(
+                          "$baseUrl/practice_api/$imgPath",
+                          fit: BoxFit.cover,
+                        ),
                       ),
                     ),
                   ),

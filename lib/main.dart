@@ -1,19 +1,44 @@
 import 'package:flutter/material.dart';
-
-import 'BizPostifyApp.dart';
-import 'details.dart';
-import 'homepage.dart';
+import 'splash_screen.dart';
+import 'login_page.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const BizPostifyApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class BizPostifyApp extends StatelessWidget {
+  const BizPostifyApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return BizPostifyApp();
+    return MaterialApp(
+      title: 'BizPostify',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        primaryColor: const Color(0xFFEFC997),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFFEFC997),
+          secondary: const Color(0xFFE8E0D3),
+          background: const Color(0xFFE8E0D3),
+        ),
+        scaffoldBackgroundColor: const Color(0xFFE8E0D3),
+        textTheme: const TextTheme(
+          bodyLarge: TextStyle(color: Color(0xFF4A4A4A)),
+          bodyMedium: TextStyle(color: Color(0xFF6B6B6B)),
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFFEFC997),
+            foregroundColor: Colors.white,
+          ),
+        ),
+      ),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => const SplashScreen(),
+        '/login': (context) => LoginPage(),
+      },
+    );
   }
 }
 

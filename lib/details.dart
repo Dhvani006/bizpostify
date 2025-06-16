@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:festival_card/login_page.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -6,6 +7,9 @@ import 'homepage.dart';
 import 'package:festival_card/submit_company_form.dart';
 
 class CompanyFormPage extends StatefulWidget {
+  final bool changes;
+  const CompanyFormPage({Key? key, this.changes = false}) : super(key: key);
+
   @override
   _CompanyFormPageState createState() => _CompanyFormPageState();
 }
@@ -26,6 +30,33 @@ class _CompanyFormPageState extends State<CompanyFormPage> {
   final ImagePicker _picker = ImagePicker();
   bool _isLoading = false;
   bool _obscurePassword = true;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.changes) {
+      _loadExistingData();
+    }
+  }
+
+  Future<void> _loadExistingData() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _nameController.text = prefs.getString('company_name') ?? '';
+      _emailController.text = prefs.getString('email') ?? '';
+      _facebookController.text = prefs.getString('facebook') ?? '';
+      _linkedinController.text = prefs.getString('linkedin') ?? '';
+      _twitterController.text = prefs.getString('twitter') ?? '';
+      _instagramController.text = prefs.getString('instagram') ?? '';
+      _mobileController.text = prefs.getString('mobile') ?? '';
+      _addressController.text = prefs.getString('address') ?? '';
+
+      String? logoPath = prefs.getString('logo_path');
+      if (logoPath != null && logoPath.isNotEmpty) {
+        _logoImage = File(logoPath);
+      }
+    });
+  }
 
   Future<void> _pickLogo() async {
     final picked = await _picker.pickImage(source: ImageSource.gallery);
@@ -54,14 +85,18 @@ class _CompanyFormPageState extends State<CompanyFormPage> {
         keyboardType: keyboardType,
         maxLines: lines,
         obscureText: isPassword && obscureText,
+        style: const TextStyle(color: Color(0xFF4A4A4A)),
         decoration: InputDecoration(
           labelText: label,
           hintText: 'Enter ${label.toLowerCase()}',
-          prefixIcon: Icon(icon),
+          labelStyle: const TextStyle(color: Color(0xFF4A4A4A)),
+          hintStyle: TextStyle(color: const Color(0xFF4A4A4A).withOpacity(0.5)),
+          prefixIcon: Icon(icon, color: const Color(0xFFEFC997)),
           suffixIcon: isPassword
               ? IconButton(
                   icon: Icon(
                     obscureText ? Icons.visibility : Icons.visibility_off,
+                    color: const Color(0xFFEFC997),
                   ),
                   onPressed: onToggleVisibility,
                 )
@@ -70,15 +105,23 @@ class _CompanyFormPageState extends State<CompanyFormPage> {
           fillColor: Colors.white,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+            borderSide: const BorderSide(color: Color(0xFFEFC997)),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+            borderSide: const BorderSide(color: Color(0xFFEFC997)),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFF6366F1)),
+            borderSide: const BorderSide(color: Color(0xFFEFC997)),
+          ),
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Colors.red),
+          ),
+          focusedErrorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Colors.red),
           ),
         ),
         validator: required
@@ -89,46 +132,64 @@ class _CompanyFormPageState extends State<CompanyFormPage> {
   }
 
   void _submitForm() async {
-    if (_formKey.currentState!.validate() && _logoImage != null) {
+    if (_formKey.currentState!.validate() &&
+        (widget.changes || _logoImage != null)) {
       setState(() {
         _isLoading = true;
       });
 
       try {
-        // First submit to the API
-        await submitCompanyForm(
-          companyName: _nameController.text,
-          email: _emailController.text,
-          password: _passwordController.text,
-          facebook: _facebookController.text,
-          linkedin: _linkedinController.text,
-          twitter: _twitterController.text,
-          instagram: _instagramController.text,
-          mobile: _mobileController.text,
-          address: _addressController.text,
-          logo: _logoImage!,
-        );
+        if (widget.changes) {
+          await updateUserData(
+            companyName: _nameController.text,
+            email: _emailController.text,
+            facebook: _facebookController.text,
+            linkedin: _linkedinController.text,
+            twitter: _twitterController.text,
+            instagram: _instagramController.text,
+            mobile: _mobileController.text,
+            address: _addressController.text,
+            logo: _logoImage,
+          );
+        } else {
+          await submitCompanyForm(
+            companyName: _nameController.text,
+            email: _emailController.text,
+            password: _passwordController.text,
+            facebook: _facebookController.text,
+            linkedin: _linkedinController.text,
+            twitter: _twitterController.text,
+            instagram: _instagramController.text,
+            mobile: _mobileController.text,
+            address: _addressController.text,
+            logo: _logoImage!,
+          );
+        }
 
-        // Then save to local storage
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('company_name', _nameController.text);
         await prefs.setString('email', _emailController.text);
-        await prefs.setString('password', _passwordController.text);
         await prefs.setString('facebook', _facebookController.text);
         await prefs.setString('linkedin', _linkedinController.text);
         await prefs.setString('twitter', _twitterController.text);
         await prefs.setString('instagram', _instagramController.text);
         await prefs.setString('mobile', _mobileController.text);
         await prefs.setString('address', _addressController.text);
-        await prefs.setString('logo_path', _logoImage!.path);
+        if (_logoImage != null) {
+          await prefs.setString('logo_path', _logoImage!.path);
+        }
 
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => HomePage()),
-        );
+        if (widget.changes) {
+          Navigator.pop(context);
+        } else {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => LoginPage()),
+          );
+        }
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Error saving company information')),
+          SnackBar(content: Text('Error: ${e.toString()}')),
         );
       } finally {
         setState(() {
@@ -137,8 +198,10 @@ class _CompanyFormPageState extends State<CompanyFormPage> {
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please fill all required fields and select a logo.'),
+        SnackBar(
+          content: Text(widget.changes
+              ? 'Please fill all required fields.'
+              : 'Please fill all required fields and select a logo.'),
         ),
       );
     }
@@ -147,45 +210,45 @@ class _CompanyFormPageState extends State<CompanyFormPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: const Color(0xFFE8E0D3),
       body: SafeArea(
         child: Column(
           children: [
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(24),
-              decoration: const BoxDecoration(
-                color: Colors.white,
+              decoration: BoxDecoration(
+                color: const Color(0xFFEFC997),
+                borderRadius: const BorderRadius.vertical(
+                  bottom: Radius.circular(20),
+                ),
                 boxShadow: [
                   BoxShadow(
-                    color: Color(0x1A000000),
+                    color: Colors.black.withOpacity(0.1),
                     blurRadius: 8,
-                    offset: Offset(0, 2),
+                    offset: const Offset(0, 2),
                   ),
                 ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Image.asset(
-                    'assets/images/splash_logo.png',
-                    height: 40,
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Company Information',
-                    style: TextStyle(
+                  Text(
+                    widget.changes ? 'Edit Profile' : 'Company Information',
+                    style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF1E293B),
+                      color: Color(0xFF4A4A4A),
                     ),
                   ),
                   const SizedBox(height: 8),
-                  const Text(
-                    'Please fill in your company details',
-                    style: TextStyle(
+                  Text(
+                    widget.changes
+                        ? 'Update your company details'
+                        : 'Please fill in your company details',
+                    style: const TextStyle(
                       fontSize: 16,
-                      color: Color(0xFF64748B),
+                      color: Color(0xFF4A4A4A),
                     ),
                   ),
                 ],
@@ -203,7 +266,7 @@ class _CompanyFormPageState extends State<CompanyFormPage> {
                       Center(
                         child: Column(
                           children: [
-                            GestureDetector(
+                            InkWell(
                               onTap: _pickLogo,
                               child: Container(
                                 width: 120,
@@ -212,14 +275,14 @@ class _CompanyFormPageState extends State<CompanyFormPage> {
                                   color: Colors.white,
                                   borderRadius: BorderRadius.circular(60),
                                   border: Border.all(
-                                    color: const Color(0xFFE2E8F0),
+                                    color: const Color(0xFFEFC997),
                                     width: 2,
                                   ),
-                                  boxShadow: const [
+                                  boxShadow: [
                                     BoxShadow(
-                                      color: Color(0x1A000000),
+                                      color: Colors.black.withOpacity(0.1),
                                       blurRadius: 8,
-                                      offset: Offset(0, 2),
+                                      offset: const Offset(0, 2),
                                     ),
                                   ],
                                 ),
@@ -234,7 +297,7 @@ class _CompanyFormPageState extends State<CompanyFormPage> {
                                     : const Icon(
                                         Icons.add_photo_alternate_outlined,
                                         size: 40,
-                                        color: Color(0xFF6366F1),
+                                        color: Color(0xFFEFC997),
                                       ),
                               ),
                             ),
@@ -244,7 +307,7 @@ class _CompanyFormPageState extends State<CompanyFormPage> {
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
-                                color: Color(0xFF1E293B),
+                                color: Color(0xFF4A4A4A),
                               ),
                             ),
                           ],
@@ -266,19 +329,20 @@ class _CompanyFormPageState extends State<CompanyFormPage> {
                         required: true,
                         keyboardType: TextInputType.emailAddress,
                       ),
-                      _buildTextField(
-                        'Password',
-                        _passwordController,
-                        Icons.lock_outline,
-                        required: true,
-                        isPassword: true,
-                        obscureText: _obscurePassword,
-                        onToggleVisibility: () {
-                          setState(() {
-                            _obscurePassword = !_obscurePassword;
-                          });
-                        },
-                      ),
+                      if (!widget.changes)
+                        _buildTextField(
+                          'Password',
+                          _passwordController,
+                          Icons.lock_outline,
+                          required: true,
+                          isPassword: true,
+                          obscureText: _obscurePassword,
+                          onToggleVisibility: () {
+                            setState(() {
+                              _obscurePassword = !_obscurePassword;
+                            });
+                          },
+                        ),
                       _buildTextField(
                         'Mobile Number',
                         _mobileController,
@@ -299,7 +363,7 @@ class _CompanyFormPageState extends State<CompanyFormPage> {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF1E293B),
+                          color: Color(0xFF4A4A4A),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -332,7 +396,11 @@ class _CompanyFormPageState extends State<CompanyFormPage> {
                           onPressed: _isLoading ? null : _submitForm,
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 16),
-                            backgroundColor: const Color(0xFF6366F1),
+                            backgroundColor: const Color(0xFFEFC997),
+                            foregroundColor: const Color(0xFF4A4A4A),
+                            disabledBackgroundColor:
+                                const Color(0xFFEFC997).withOpacity(0.6),
+                            elevation: 0,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -344,7 +412,7 @@ class _CompanyFormPageState extends State<CompanyFormPage> {
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
                                     valueColor: AlwaysStoppedAnimation<Color>(
-                                        Colors.white),
+                                        Color(0xFF4A4A4A)),
                                   ),
                                 )
                               : const Text(
@@ -356,6 +424,7 @@ class _CompanyFormPageState extends State<CompanyFormPage> {
                                 ),
                         ),
                       ),
+                      const SizedBox(height: 24),
                     ],
                   ),
                 ),
