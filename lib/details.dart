@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'homepage.dart';
 import 'package:festival_card/submit_company_form.dart';
+import 'package:festival_card/api_config.dart';
 
 class CompanyFormPage extends StatefulWidget {
   final bool changes;
@@ -26,6 +27,7 @@ class _CompanyFormPageState extends State<CompanyFormPage> {
   final _addressController = TextEditingController();
   final _passwordController = TextEditingController();
 
+  String? _logoUrl;
   File? _logoImage;
   final ImagePicker _picker = ImagePicker();
   bool _isLoading = false;
@@ -53,7 +55,11 @@ class _CompanyFormPageState extends State<CompanyFormPage> {
 
       String? logoPath = prefs.getString('logo_path');
       if (logoPath != null && logoPath.isNotEmpty) {
-        _logoImage = File(logoPath);
+        if (logoPath.startsWith('http')) {
+          _logoUrl = logoPath;
+        } else {
+          _logoUrl = "$baseUrl/practice_api/uploaded_logo/$logoPath";
+        }
       }
     });
   }
@@ -63,6 +69,7 @@ class _CompanyFormPageState extends State<CompanyFormPage> {
     if (picked != null) {
       setState(() {
         _logoImage = File(picked.path);
+        _logoUrl = null; // Clear the URL when new image is picked
       });
     }
   }
@@ -151,6 +158,14 @@ class _CompanyFormPageState extends State<CompanyFormPage> {
             address: _addressController.text,
             logo: _logoImage,
           );
+
+          if (mounted) {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => HomePage()),
+              (route) => false,
+            );
+          }
         } else {
           await submitCompanyForm(
             companyName: _nameController.text,
@@ -164,8 +179,14 @@ class _CompanyFormPageState extends State<CompanyFormPage> {
             address: _addressController.text,
             logo: _logoImage!,
           );
-        }
 
+          if (mounted) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => LoginPage()),
+            );
+          }
+        }
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('company_name', _nameController.text);
         await prefs.setString('email', _emailController.text);
@@ -178,23 +199,18 @@ class _CompanyFormPageState extends State<CompanyFormPage> {
         if (_logoImage != null) {
           await prefs.setString('logo_path', _logoImage!.path);
         }
-
-        if (widget.changes) {
-          Navigator.pop(context);
-        } else {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => LoginPage()),
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: ${e.toString()}')),
           );
         }
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${e.toString()}')),
-        );
       } finally {
-        setState(() {
-          _isLoading = false;
-        });
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -292,13 +308,41 @@ class _CompanyFormPageState extends State<CompanyFormPage> {
                                         child: Image.file(
                                           _logoImage!,
                                           fit: BoxFit.cover,
+                                          errorBuilder:
+                                              (context, error, stackTrace) {
+                                            print('Error loading logo: $error');
+                                            return const Icon(
+                                              Icons.business,
+                                              size: 40,
+                                              color: Color(0xFFEFC997),
+                                            );
+                                          },
                                         ),
                                       )
-                                    : const Icon(
-                                        Icons.add_photo_alternate_outlined,
-                                        size: 40,
-                                        color: Color(0xFFEFC997),
-                                      ),
+                                    : _logoUrl != null
+                                        ? ClipRRect(
+                                            borderRadius:
+                                                BorderRadius.circular(60),
+                                            child: Image.network(
+                                              _logoUrl!,
+                                              fit: BoxFit.cover,
+                                              errorBuilder:
+                                                  (context, error, stackTrace) {
+                                                print(
+                                                    'Error loading logo: $error');
+                                                return const Icon(
+                                                  Icons.business,
+                                                  size: 40,
+                                                  color: Color(0xFFEFC997),
+                                                );
+                                              },
+                                            ),
+                                          )
+                                        : const Icon(
+                                            Icons.add_photo_alternate_outlined,
+                                            size: 40,
+                                            color: Color(0xFFEFC997),
+                                          ),
                               ),
                             ),
                             const SizedBox(height: 12),

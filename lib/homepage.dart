@@ -10,6 +10,7 @@ import 'editing_page.dart';
 import 'model/CompanyInfo.dart';
 import 'module/CompanyInfoSelectionDialog.dart';
 import 'details.dart';
+import 'login_page.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -111,149 +112,125 @@ class _HomePageState extends State<HomePage> {
                 ),
               );
             },
-            icon: const Icon(Icons.edit, color: Color(0xFFEFC997)),
+            icon: const Icon(Icons.edit, color: Color.fromARGB(255, 5, 5, 5)),
             label: const Text(
               'Customize',
-              style: TextStyle(color: Color(0xFFEFC997)),
+              style: TextStyle(color: Color.fromARGB(255, 243, 228, 96)),
             ),
           ),
         ],
       ),
-      drawer: Drawer(
-        child: Column(
-          children: [
-            DrawerHeader(
-              decoration: const BoxDecoration(
-                color: Color(0xFFE8E0D3),
-              ),
-              child: SafeArea(
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        width: 70,
-                        height: 70,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(35),
-                          child: companyInfo.logoPath.isNotEmpty
-                              ? Image.network(
-                                  companyInfo.logoPath.startsWith('http')
-                                      ? companyInfo.logoPath
-                                      : "$baseUrl/practice_api/uploaded_logo/${companyInfo.logoPath}",
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) {
-                                    print('Error loading logo: $error');
-                                    return const Icon(
-                                      Icons.business,
-                                      size: 35,
-                                      color: Color(0xFF4A4A4A),
-                                    );
-                                  },
-                                )
-                              : const Icon(
-                                  Icons.business,
-                                  size: 35,
-                                  color: Color(0xFF4A4A4A),
-                                ),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Flexible(
-                        child: Text(
-                          companyInfo.name.isNotEmpty
-                              ? companyInfo.name
-                              : 'Company Name',
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF4A4A4A),
+      drawer: SizedBox(
+        width: 250,
+        child: Drawer(
+          child: Column(
+            children: [
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 15, vertical: 32),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
                           ),
-                          textAlign: TextAlign.center,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                        ],
                       ),
-                      const SizedBox(height: 2),
-                      Flexible(
-                        child: Text(
-                          companyInfo.email.isNotEmpty ? companyInfo.email : '',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: const Color(0xFF4A4A4A).withOpacity(0.7),
-                          ),
-                          textAlign: TextAlign.center,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(40),
+                        child: companyInfo.logoPath.isNotEmpty
+                            ? Image.network(
+                                companyInfo.logoPath.startsWith('http')
+                                    ? companyInfo.logoPath
+                                    : "$baseUrl/practice_api/uploaded_logo/${companyInfo.logoPath}",
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  print('Error loading logo: $error');
+                                  return const Icon(
+                                    Icons.business,
+                                    size: 40,
+                                    color: Color(0xFF4A4A4A),
+                                  );
+                                },
+                              )
+                            : const Icon(
+                                Icons.business,
+                                size: 40,
+                                color: Color(0xFF4A4A4A),
+                              ),
                       ),
-                    ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      companyInfo.name.isNotEmpty
+                          ? companyInfo.name
+                          : 'Company Name',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF4A4A4A),
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                height: 1,
+                color: Colors.grey.withOpacity(0.1),
+              ),
+              ListTile(
+                leading: const Icon(Icons.edit, color: Color(0xFF4A4A4A)),
+                title: const Text(
+                  'Edit Profile',
+                  style: TextStyle(
+                    color: Color(0xFF4A4A4A),
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          const CompanyFormPage(changes: true),
+                    ),
+                  );
+                },
               ),
-            ),
-            Container(
-              height: 1,
-              color: Colors.grey.withOpacity(0.1),
-            ),
-            ListTile(
-              leading: const Icon(Icons.edit, color: Color(0xFF4A4A4A)),
-              title: const Text(
-                'Edit Profile',
-                style: TextStyle(
-                  color: Color(0xFF4A4A4A),
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const CompanyFormPage(changes: true),
+              ListTile(
+                leading: const Icon(Icons.logout, color: Color(0xFF4A4A4A)),
+                title: const Text(
+                  'Logout',
+                  style: TextStyle(
+                    color: Color(0xFF4A4A4A),
+                    fontWeight: FontWeight.w500,
                   ),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.logout, color: Color(0xFF4A4A4A)),
-              title: const Text(
-                'Logout',
-                style: TextStyle(
-                  color: Color(0xFF4A4A4A),
-                  fontWeight: FontWeight.w500,
                 ),
+                onTap: () async {
+                  final prefs = await SharedPreferences.getInstance();
+                  await prefs.clear(); // Clear all stored data
+                  if (mounted) {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => LoginPage()),
+                    );
+                  }
+                },
               ),
-              onTap: () {
-                // TODO: Implement logout logic
-                Navigator.pop(context);
-              },
-            ),
-          ],
+            ],
+          ),
         ),
       ),
       body: isLoading
